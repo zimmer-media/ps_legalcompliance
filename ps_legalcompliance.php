@@ -28,11 +28,16 @@ if (!defined('_PS_VERSION_')) {
     exit;
 }
 
+/* Namespaces used in this module */
+use PrestaShop\PrestaShop\Core\Foundation\Database\EntityManager;
+use PrestaShop\PrestaShop\Core\Foundation\Filesystem\FileSystem;
+use PrestaShop\PrestaShop\Core\Email\EmailLister;
+
 /* Include required entities */
 include_once dirname(__FILE__) . '/entities/AeucCMSRoleEmailEntity.php';
 include_once dirname(__FILE__) . '/entities/AeucEmailEntity.php';
 
-class Advancedeucompliance extends Module
+class Ps_LegalCompliance extends Module
 {
     /* Class members */
     protected   $config_form = false;
@@ -55,9 +60,9 @@ class Advancedeucompliance extends Module
 
     const DEFAULT_PS_PRODUCT_WEIGHT_PRECISION = 2;
 
-    public function __construct(Core_Foundation_Database_EntityManager $entity_manager,
-                                Core_Foundation_FileSystem_FileSystem $fs,
-                                Core_Business_Email_EmailLister $email)
+    public function __construct(EntityManager $entity_manager,
+                                FileSystem $fs,
+                                EmailLister $email)
     {
 
         $this->name = 'ps_legalcompliance';
@@ -251,7 +256,7 @@ class Advancedeucompliance extends Module
 
         $ps_weight_precision_installed = Configuration::get('PS_PRODUCT_WEIGHT_PRECISION') ?
             (int)Configuration::get('PS_PRODUCT_WEIGHT_PRECISION') :
-            Advancedeucompliance::DEFAULT_PS_PRODUCT_WEIGHT_PRECISION;
+            self::DEFAULT_PS_PRODUCT_WEIGHT_PRECISION;
 
         return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
                Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
@@ -521,7 +526,7 @@ class Advancedeucompliance extends Module
         $cms_repository = $this->entity_manager->getRepository('CMS');
         // Check first if LEGAL_REVOCATION CMS Role is set
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
+        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
 
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
@@ -689,7 +694,7 @@ class Advancedeucompliance extends Module
                 if (!$product->is_virtual) {
                     $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
                     $cms_repository = $this->entity_manager->getRepository('CMS');
-                    $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
+                    $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
 
                     if (isset($cms_page_associated->id_cms) && $cms_page_associated->id_cms != 0) {
 
@@ -969,14 +974,14 @@ class Advancedeucompliance extends Module
     {
         // Check first if LEGAL_REVOCATION CMS Role has been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_REVOCATION);
+        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
         $cms_roles = $this->getCMSRoles();
 
         if ((bool)$is_option_active) {
             if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms == 0) {
                 $this->_errors[] =
                     sprintf($this->l('\'Revocation Terms within ToS\' label cannot be activated unless you associate "%s" role with a CMS Page.',
-                                     'ps_legalcompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_REVOCATION]);
+                                     'ps_legalcompliance'), (string)$cms_roles[self::LEGAL_REVOCATION]);
 
                 return;
             }
@@ -999,14 +1004,14 @@ class Advancedeucompliance extends Module
     {
         // Check first if LEGAL_SHIP_PAY CMS Role has been set before doing anything here
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_associated = $cms_role_repository->findOneByName(Advancedeucompliance::LEGAL_SHIP_PAY);
+        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
         $cms_roles = $this->getCMSRoles();
 
         if ((bool)$is_option_active) {
             if (!$cms_page_associated instanceof CMSRole || (int)$cms_page_associated->id_cms === 0) {
                 $this->_errors[] =
                     sprintf($this->l('Shipping fees label cannot be activated unless you associate "%s" role with a CMS Page',
-                                     'ps_legalcompliance'), (string)$cms_roles[Advancedeucompliance::LEGAL_SHIP_PAY]);
+                                     'ps_legalcompliance'), (string)$cms_roles[self::LEGAL_SHIP_PAY]);
 
                 return;
             }
@@ -1119,13 +1124,13 @@ class Advancedeucompliance extends Module
 
     protected function getCMSRoles()
     {
-        return array(Advancedeucompliance::LEGAL_NOTICE          => $this->l('Legal notice', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_CONDITIONS      => $this->l('Terms of Service (ToS)', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_REVOCATION      => $this->l('Revocation terms', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_REVOCATION_FORM => $this->l('Revocation form', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_PRIVACY         => $this->l('Privacy', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_ENVIRONMENTAL   => $this->l('Environmental notice', 'ps_legalcompliance'),
-                     Advancedeucompliance::LEGAL_SHIP_PAY        => $this->l('Shipping and payment', 'ps_legalcompliance')
+        return array(self::LEGAL_NOTICE          => $this->l('Legal notice', 'ps_legalcompliance'),
+                     self::LEGAL_CONDITIONS      => $this->l('Terms of Service (ToS)', 'ps_legalcompliance'),
+                     self::LEGAL_REVOCATION      => $this->l('Revocation terms', 'ps_legalcompliance'),
+                     self::LEGAL_REVOCATION_FORM => $this->l('Revocation form', 'ps_legalcompliance'),
+                     self::LEGAL_PRIVACY         => $this->l('Privacy', 'ps_legalcompliance'),
+                     self::LEGAL_ENVIRONMENTAL   => $this->l('Environmental notice', 'ps_legalcompliance'),
+                     self::LEGAL_SHIP_PAY        => $this->l('Shipping and payment', 'ps_legalcompliance')
         );
     }
 
