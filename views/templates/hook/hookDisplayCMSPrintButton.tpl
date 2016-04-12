@@ -22,4 +22,5 @@
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  *}
-<p class="aeuc_top_text_msg">{$cart_text|escape:'htmlall'}</p>
+
+<input type="submit" name="printCMSPage" value="{l s='Print this page' mod='ps_legalcompliance'}" class="btn btn-secondary" onclick="window.print()" />

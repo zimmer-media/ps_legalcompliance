@@ -22,8 +22,14 @@
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
  *}
-<tr>
-    <td colspan="{$colspan_total}" class="total_price_container text-left">
-        <p class="aeuc_bottom_text_msg">{$cart_text|escape:'htmlall'}</p>
-     </td>
-</tr>
+
+ <div class="euAboutUsCMS col-md-2">
+ 	<h3 class="h3">{l s='About us' mod='ps_legalcompliance'}</h3>
+ 	<ul>
+ 		{foreach from=$cms_links item=cms_link}
+ 			<li>
+ 				<a href="{$cms_link.link}" class="cms-page-link" title="{$cms_link.description|default:''}" id="{$cms_link.id}"> {$cms_link.title} </a>
+ 			</li>
+ 		{/foreach}
+ 	</ul>
+ </div>
