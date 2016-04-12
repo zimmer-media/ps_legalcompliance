@@ -44,7 +44,6 @@ class Ps_LegalCompliance extends Module
     protected   $entity_manager;
     protected   $filesystem;
     protected   $emails;
-    private     $missing_templates = array();
     protected   $_errors;
     protected   $_warnings;
 
@@ -57,8 +56,6 @@ class Ps_LegalCompliance extends Module
     const LEGAL_PRIVACY         = 'LEGAL_PRIVACY';
     const LEGAL_ENVIRONMENTAL   = 'LEGAL_ENVIRONMENTAL';
     const LEGAL_SHIP_PAY        = 'LEGAL_SHIP_PAY';
-
-    const DEFAULT_PS_PRODUCT_WEIGHT_PRECISION = 2;
 
     public function __construct(EntityManager $entity_manager,
                                 FileSystem $fs,
@@ -102,42 +99,12 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('overrideTOSDisplay') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
-                  $this->registerHook('displayAfterShoppingCartBlock') &&
-                  $this->registerHook('displayBeforeShoppingCartBlock') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->createConfig();
 
         $this->emptyTemplatesCache();
 
         return (bool)$return;
-    }
-
-    public function isThemeCompliant()
-    {
-        $return = true;
-
-        foreach ($this->getRequiredThemeTemplate() as $required_tpl) {
-
-            if (!is_file(_PS_THEME_DIR_ . $required_tpl)) {
-                $this->missing_templates[] = $required_tpl;
-                $return = false;
-            }
-        }
-
-        return $return;
-    }
-
-    public function getRequiredThemeTemplate()
-    {
-        return array(
-            'order-address-advanced.tpl',
-            'order-carrier-advanced.tpl',
-            'order-carrier-opc-advanced.tpl',
-            'order-opc-advanced.tpl',
-            'order-opc-new-account-advanced.tpl',
-            'order-payment-advanced.tpl',
-            'shopping-cart-advanced.tpl'
-        );
     }
 
     public function uninstall()
@@ -149,8 +116,7 @@ class Ps_LegalCompliance extends Module
 
     public function disable($force_all = false)
     {
-        $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
-        $is_adv_api_disabled &= (bool)Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
+        $is_adv_api_disabled = (bool)Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
         return parent::disable() && $is_adv_api_disabled;
     }
 
@@ -184,14 +150,6 @@ class Ps_LegalCompliance extends Module
     public function installHooks()
     {
         $hooks = array(
-            'displayBeforeShoppingCartBlock' => array(
-                'name'      => 'display before Shopping cart block',
-                'description' => 'Display content after Shopping Cart'
-            ),
-            'displayAfterShoppingCartBlock'  => array(
-                'name'      => 'display after Shopping cart block',
-                'description' => 'Display content after Shopping Cart'
-            ),
             'displayPaymentEu'  => array(
                 'name'      => 'Display EU payment options (helper)',
                 'description' => 'Hook to display payment options'
@@ -227,52 +185,32 @@ class Ps_LegalCompliance extends Module
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
-        $shopping_cart_text_before = array();
-        $shopping_cart_text_after = array();
 
         $langs_repository = $this->entity_manager->getRepository('Language');
         $langs = $langs_repository->findAll();
 
         foreach ($langs as $lang) {
             $delivery_time_available_values[(int)$lang->id] = $this->l('Delivery: 1 to 3 weeks', 'ps_legalcompliance');
-            $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');
-            $shopping_cart_text_before[(int)$lang->id] = '';
-            $shopping_cart_text_after[(int)$lang->id] = '';
+            $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');            
         }
 
-        /* Base settings */
-        $this->processAeucFeatTellAFriend(true);
+        /* Base settings */        
         $this->processAeucFeatReorder(true);
-        $this->processAeucFeatAdvPaymentApi(false);
         $this->processAeucLabelRevocationTOS(false);
         $this->processAeucLabelRevocationVP(false);
         $this->processAeucLabelSpecificPrice(true);
         $this->processAeucLabelTaxIncExc(true);
-        $this->processAeucLabelShippingIncExc(false);
-        $this->processAeucLabelWeight(true);
+        $this->processAeucLabelShippingIncExc(false);        
         $this->processAeucLabelCombinationFrom(true);
 
-        $is_theme_compliant = $this->isThemeCompliant();
-
-        $ps_weight_precision_installed = Configuration::get('PS_PRODUCT_WEIGHT_PRECISION') ?
-            (int)Configuration::get('PS_PRODUCT_WEIGHT_PRECISION') :
-            self::DEFAULT_PS_PRODUCT_WEIGHT_PRECISION;
-
-        return Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false) &&
-               Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false) &&
-               Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
+        return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
                Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
-               Configuration::updateValue('AEUC_LABEL_WEIGHT', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
-               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
-               Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_BEFORE', $shopping_cart_text_before) &&
-               Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $shopping_cart_text_after) &&
-               Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', (bool)$is_theme_compliant) &&
-               Configuration::updateValue('PS_PRODUCT_WEIGHT_PRECISION', (int)$ps_weight_precision_installed);
+               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
     }
 
     public function unloadTables()
@@ -339,21 +277,14 @@ class Ps_LegalCompliance extends Module
             }
         }
 
-        return Configuration::deleteByName('AEUC_FEAT_TELL_A_FRIEND') &&
-               Configuration::deleteByName('AEUC_FEAT_ADV_PAYMENT_API') &&
-               Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
+        return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
-               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
-               Configuration::deleteByName('AEUC_LABEL_WEIGHT') &&
+               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&               
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
-               Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_BEFORE') &&
-               Configuration::deleteByName('AEUC_SHOPPING_CART_TEXT_AFTER') &&
-               Configuration::deleteByName('AEUC_IS_THEME_COMPLIANT') &&
-               Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false) &&
                Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
     }
 
@@ -587,33 +518,6 @@ class Ps_LegalCompliance extends Module
         return $this->display(__FILE__, 'hookOverrideTOSDisplay.tpl');
     }
 
-    public function hookDisplayBeforeShoppingCartBlock($params)
-    {
-        if ($this->context->controller instanceof OrderOpcController || property_exists($this->context->controller, 'step') && $this->context->controller->step == 3) {
-            $cart_text = Configuration::get('AEUC_SHOPPING_CART_TEXT_BEFORE', $this->context->language->id);
-
-            if ($cart_text) {
-                $this->context->smarty->assign('cart_text', $cart_text);
-
-                return $this->display(__FILE__, 'displayShoppingCartBeforeBlock.tpl');
-            }
-        }
-    }
-
-    public function hookDisplayAfterShoppingCartBlock($params)
-    {
-
-        $cart_text = Configuration::get('AEUC_SHOPPING_CART_TEXT_AFTER', Context::getContext()->language->id);
-
-        if ($cart_text && isset($params['colspan_total'])) {
-            $this->context->smarty->assign(array('cart_text'     => $cart_text,
-                                                 'colspan_total' => (int)$params['colspan_total']
-                                           ));
-
-            return $this->display(__FILE__, 'displayShoppingCartAfterBlock.tpl');
-        }
-    }
-
     public function hookDisplayProductPriceBlock($param)
     {
         if (!isset($param['product']) || !isset($param['type'])) {
@@ -720,20 +624,6 @@ class Ps_LegalCompliance extends Module
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
 
-        /* Handles product's weight */
-        if ($param['type'] == 'weight' && (bool)Configuration::get('PS_DISPLAY_PRODUCT_WEIGHT') === true &&
-            isset($param['hook_origin']) && $param['hook_origin'] == 'product_sheet'
-        ) {
-            if ((float)$product->weight) {
-                $smartyVars['weight'] = array();
-                $rounded_weight = round((float)$product->weight, Configuration::get('PS_PRODUCT_WEIGHT_PRECISION'));
-                $smartyVars['weight']['rounded_weight_str_i18n'] =
-                    $rounded_weight . ' ' . Configuration::get('PS_WEIGHT_UNIT');
-
-                return $this->dumpHookDisplayProductPriceBlock($smartyVars);
-            }
-        }
-
         /* Handle Estimated delivery time label */
         if ($param['type'] == 'after_price' && !$product->is_virtual) {
             $context_id_lang = $this->context->language->id;
@@ -772,28 +662,8 @@ class Ps_LegalCompliance extends Module
      */
     public function getContent()
     {
-        $theme_warning = null;
-        $this->refreshThemeStatus();
+        $theme_warning = null;        
         $success_band = $this->_postProcess();
-        if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
-            $missing = '<ul>';
-            foreach ($this->missing_templates as $missing_tpl) {
-                $missing .= '<li>'.$missing_tpl.' '.$this->l('missing').'</li>';
-            }
-            $missing .= '</ul><br/>';
-            $discard_warning_link = $this->context->link->getAdminLink('AdminModules', false) .
-                                    '&configure='.$this->name.
-                                    '&tab_module='.$this->tab.
-                                    '&module_name='.$this->name.
-                                    '&discard_tpl_warn=1'.
-                                    '&token='.Tools::getAdminTokenLite('AdminModules');
-            $missing .= '<a href="'.$discard_warning_link.'" type="button">'.$this->l('Hide this, I know what I am doing.',
-                                                                                      'ps_legalcompliance').
-                        '</a>';
-            $theme_warning = $this->displayWarning($this->l('It seems that your current theme is not compatible with this module, some mandatory templates are missing. It is possible some options may not work as expected.',
-                                                            'ps_legalcompliance').$missing);
-
-        }
 
         $this->context->smarty->assign('module_dir', $this->_path);
         $this->context->smarty->assign('errors', $this->_errors);
@@ -820,7 +690,6 @@ class Ps_LegalCompliance extends Module
 
         $post_keys_complex = array('AEUC_legalContentManager',
                                    'AEUC_emailAttachmentsManager',
-                                   'PS_PRODUCT_WEIGHT_PRECISION',
                                    'discard_tpl_warn'
         );
 
@@ -866,18 +735,6 @@ class Ps_LegalCompliance extends Module
                 $id_lang = (int)$exploded[$count - 1];
                 $i10n_inputs_received['AEUC_LABEL_DELIVERY_TIME_OOS'][$id_lang] = $received_values[$key_received];
             }
-            if (strripos($key_received, 'AEUC_SHOPPING_CART_TEXT_BEFORE') !== false) {
-                $exploded = explode('_', $key_received);
-                $count = count($exploded);
-                $id_lang = (int)$exploded[$count - 1];
-                $i10n_inputs_received['AEUC_SHOPPING_CART_TEXT_BEFORE'][$id_lang] = $received_values[$key_received];
-            }
-            if (strripos($key_received, 'AEUC_SHOPPING_CART_TEXT_AFTER') !== false) {
-                $exploded = explode('_', $key_received);
-                $count = count($exploded);
-                $id_lang = (int)$exploded[$count - 1];
-                $i10n_inputs_received['AEUC_SHOPPING_CART_TEXT_AFTER'][$id_lang] = $received_values[$key_received];
-            }
         }
 
         if (count($i10n_inputs_received) > 0) {
@@ -898,18 +755,6 @@ class Ps_LegalCompliance extends Module
         }
     }
 
-    protected function processPsProductWeightPrecision($option_value)
-    {
-        $option_value = (int)$option_value;
-
-        /* Avoid negative values */
-        if ($option_value < 0) {
-            $option_value = 0;
-        }
-
-        Configuration::updateValue('PS_PRODUCT_WEIGHT_PRECISION', (int)$option_value);
-    }
-
     protected function processAeucLabelDeliveryTime(array $i10n_inputs)
     {
         if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_TIME_AVAILABLE'])) {
@@ -917,16 +762,6 @@ class Ps_LegalCompliance extends Module
         }
         if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_TIME_OOS'])) {
             Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $i10n_inputs['AEUC_LABEL_DELIVERY_TIME_OOS']);
-        }
-    }
-
-    protected function processAeucShoppingCartText(array $i10n_inputs)
-    {
-        if (isset($i10n_inputs['AEUC_SHOPPING_CART_TEXT_BEFORE'])) {
-            Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_BEFORE', $i10n_inputs['AEUC_SHOPPING_CART_TEXT_BEFORE']);
-        }
-        if (isset($i10n_inputs['AEUC_SHOPPING_CART_TEXT_AFTER'])) {
-            Configuration::updateValue('AEUC_SHOPPING_CART_TEXT_AFTER', $i10n_inputs['AEUC_SHOPPING_CART_TEXT_AFTER']);
         }
     }
 
@@ -1026,62 +861,10 @@ class Ps_LegalCompliance extends Module
     {
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
-
-    private function refreshThemeStatus()
-    {
-        if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT') === false) {
-            $re_check = $this->isThemeCompliant();
-            if ($re_check === true) {
-                Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', (bool)$re_check);
-            }
-        }
-    }
-
-    protected function processDiscardTplWarn()
-    {
-        Configuration::updateValue('AEUC_IS_THEME_COMPLIANT', true);
-    }
-
-    protected function processAeucFeatAdvPaymentApi($is_option_active)
-    {
-        $this->refreshThemeStatus();
-
-        if ((bool)$is_option_active) {
-            if ((bool)Configuration::get('AEUC_IS_THEME_COMPLIANT')) {
-                Configuration::updateValue('PS_ADVANCED_PAYMENT_API', true);
-                Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', true);
-            } else {
-                $this->_errors[] = $this->l('It is not possible to enable the "Advanced Checkout Page" as your theme is not compatible with this option.',
-                                            'ps_legalcompliance');
-            }
-        } else {
-            Configuration::updateValue('PS_ADVANCED_PAYMENT_API', false);
-            Configuration::updateValue('AEUC_FEAT_ADV_PAYMENT_API', false);
-        }
-    }
-
+    
     protected function processPsAtcpShipWrap($is_option_active)
     {
         Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);
-    }
-
-    protected function processAeucFeatTellAFriend($is_option_active)
-    {
-        $staf_module = Module::getInstanceByName('sendtoafriend');
-        if ($staf_module) {
-
-            if ((bool)$is_option_active) {
-                Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', true);
-                if ($staf_module->isEnabledForShopContext() === false) {
-                    $staf_module->enable();
-                }
-            } elseif (!(bool)$is_option_active) {
-                Configuration::updateValue('AEUC_FEAT_TELL_A_FRIEND', false);
-                if ($staf_module->isEnabledForShopContext() === true) {
-                    $staf_module->disable();
-                }
-            }
-        }
     }
 
     protected function processAeucFeatReorder($is_option_active)
@@ -1091,17 +874,6 @@ class Ps_LegalCompliance extends Module
             Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', false);
         } else {
             Configuration::updateValue('PS_DISALLOW_HISTORY_REORDERING', true);
-        }
-    }
-
-    protected function processAeucLabelWeight($is_option_active)
-    {
-        if ((bool)$is_option_active) {
-            Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', true);
-            Configuration::updateValue('AEUC_LABEL_WEIGHT', true);
-        } elseif (!(bool)$is_option_active) {
-            Configuration::updateValue('PS_DISPLAY_PRODUCT_WEIGHT', false);
-            Configuration::updateValue('AEUC_LABEL_WEIGHT', false);
         }
     }
 
@@ -1252,42 +1024,6 @@ class Ps_LegalCompliance extends Module
                                                        ),
                                                        array(
                                                            'type'    => 'switch',
-                                                           'label'   => $this->l('Product weight label',
-                                                                                 'ps_legalcompliance'),
-                                                           'name'    => 'AEUC_LABEL_WEIGHT',
-                                                           'is_bool' => true,
-
-                                                           'desc'    => sprintf($this->l('Display the weight of a product (when information is available and product weighs more than 1 %s).',
-                                                                                         'ps_legalcompliance'), Configuration::get('PS_WEIGHT_UNIT')),
-                                                           'values'  => array(
-                                                               array(
-                                                                   'id'    => 'active_on',
-                                                                   'value' => true,
-                                                                   'label' => $this->l('Enabled',
-                                                                                       'ps_legalcompliance')
-                                                               ),
-                                                               array(
-                                                                   'id'    => 'active_off',
-                                                                   'value' => false,
-                                                                   'label' => $this->l('Disabled',
-                                                                                       'ps_legalcompliance')
-                                                               )
-                                                           ),
-                                                       ),
-                                                       array(
-                                                           'type'  => 'text',
-                                                           'label' => $this->l('Decimals for product weight',
-                                                                               'ps_legalcompliance'),
-                                                           'name'  => 'PS_PRODUCT_WEIGHT_PRECISION',
-                                                           'desc'  => sprintf($this->l('Choose how many decimals to display for the product weight (e.g: 1 %s with 0 decimal, or 1.01 %s with 2 decimals)',
-                                                                                       'ps_legalcompliance'),
-                                                                              Configuration::get('PS_WEIGHT_UNIT'),
-                                                                              Configuration::get('PS_WEIGHT_UNIT')),
-                                                           'hint'  => $this->l('This value must be positive.',
-                                                                               'ps_legalcompliance'),
-                                                       ),
-                                                       array(
-                                                           'type'    => 'switch',
                                                            'label'   => $this->l('Revocation Terms within ToS',
                                                                                  'ps_legalcompliance'),
                                                            'name'    => 'AEUC_LABEL_REVOCATION_TOS',
@@ -1361,25 +1097,6 @@ class Ps_LegalCompliance extends Module
                                                                )
                                                            ),
                                                        ),
-                                                       array(
-                                                           'type'  => 'textarea',
-                                                           'lang'  => true,
-                                                           'label' => $this->l('Upper shopping cart text',
-                                                                               'ps_legalcompliance'),
-                                                           'name'  => 'AEUC_SHOPPING_CART_TEXT_BEFORE',
-                                                           'desc'  => $this->l('Add a custom text above the shopping cart summary.',
-                                                                               'ps_legalcompliance'),
-                                                       ),
-                                                       array(
-                                                           'type'  => 'textarea',
-                                                           'lang'  => true,
-                                                           'label' => $this->l('Lower shopping cart text',
-                                                                               'ps_legalcompliance'),
-                                                           'name'  => 'AEUC_SHOPPING_CART_TEXT_AFTER',
-                                                           'desc'  => $this->l('Add a custom text at the bottom of the shopping cart summary.',
-                                                                               'ps_legalcompliance'),
-                                                       ),
-
                                      ),
                                      'submit' => array(
                                          'title' => $this->l('Save', 'ps_legalcompliance'),
@@ -1395,8 +1112,6 @@ class Ps_LegalCompliance extends Module
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
-        $shopping_cart_text_before_values = array();
-        $shopping_cart_text_after_values = array();
 
         $langs = Language::getLanguages(false, false);
 
@@ -1404,8 +1119,6 @@ class Ps_LegalCompliance extends Module
             $tmp_id_lang = (int)$lang['id_lang'];
             $delivery_time_available_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $tmp_id_lang);
             $delivery_time_oos_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', $tmp_id_lang);
-            $shopping_cart_text_before_values[$tmp_id_lang] = Configuration::get('AEUC_SHOPPING_CART_TEXT_BEFORE', $tmp_id_lang);
-            $shopping_cart_text_after_values[$tmp_id_lang] = Configuration::get('AEUC_SHOPPING_CART_TEXT_AFTER', $tmp_id_lang);
         }
 
         return array(
@@ -1413,14 +1126,10 @@ class Ps_LegalCompliance extends Module
             'AEUC_LABEL_DELIVERY_TIME_OOS'       => $delivery_time_oos_values,
             'AEUC_LABEL_SPECIFIC_PRICE'          => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
             'AEUC_LABEL_TAX_INC_EXC'             => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
-            'AEUC_LABEL_WEIGHT'                  => Configuration::get('AEUC_LABEL_WEIGHT'),
             'AEUC_LABEL_REVOCATION_TOS'          => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
             'AEUC_LABEL_REVOCATION_VP'           => Configuration::get('AEUC_LABEL_REVOCATION_VP'),
             'AEUC_LABEL_SHIPPING_INC_EXC'        => Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC'),
-            'AEUC_LABEL_COMBINATION_FROM'        => Configuration::get('AEUC_LABEL_COMBINATION_FROM'),
-            'AEUC_SHOPPING_CART_TEXT_BEFORE'     => $shopping_cart_text_before_values,
-            'AEUC_SHOPPING_CART_TEXT_AFTER'      => $shopping_cart_text_after_values,
-            'PS_PRODUCT_WEIGHT_PRECISION'        => Configuration::get('PS_PRODUCT_WEIGHT_PRECISION')
+            'AEUC_LABEL_COMBINATION_FROM'        => Configuration::get('AEUC_LABEL_COMBINATION_FROM')
         );
     }
 
@@ -1464,29 +1173,7 @@ class Ps_LegalCompliance extends Module
                     'title' => $this->l('Features', 'ps_legalcompliance'),
                     'icon'  => 'icon-cogs',
                 ),
-                'input'  => array(
-                    array(
-                        'type'    => 'switch',
-                        'label'   => $this->l('Enable \'Tell A Friend\' feature', 'ps_legalcompliance'),
-                        'name'    => 'AEUC_FEAT_TELL_A_FRIEND',
-                        'is_bool' => true,
-                        'desc'    => $this->l('Make sure you comply with your local legislation before enabling: the emails sent by this feature can be considered as unsolicited commercial emails.',
-                                              'ps_legalcompliance'),
-                        'hint'    => $this->l('If enabled, the \'Send to a Friend\' module allows customers to send to a friend an email with a link to a product\'s page.',
-                                              'ps_legalcompliance'),
-                        'values'  => array(
-                            array(
-                                'id'    => 'active_on',
-                                'value' => true,
-                                'label' => $this->l('Enabled', 'ps_legalcompliance')
-                            ),
-                            array(
-                                'id'    => 'active_off',
-                                'value' => false,
-                                'label' => $this->l('Disabled', 'ps_legalcompliance')
-                            )
-                        ),
-                    ),
+                'input'  => array(                    
                     array(
                         'type'    => 'switch',
                         'label'   => $this->l('Enable \'Reordering\' feature', 'ps_legalcompliance'),
@@ -1495,28 +1182,6 @@ class Ps_LegalCompliance extends Module
                         'name'    => 'AEUC_FEAT_REORDER',
                         'is_bool' => true,
                         'desc'    => $this->l('Make sure you comply with your local legislation before enabling: it can be considered as unsolicited goods.',
-                                              'ps_legalcompliance'),
-                        'values'  => array(
-                            array(
-                                'id'    => 'active_on',
-                                'value' => true,
-                                'label' => $this->l('Enabled', 'ps_legalcompliance')
-                            ),
-                            array(
-                                'id'    => 'active_off',
-                                'value' => false,
-                                'label' => $this->l('Disabled', 'ps_legalcompliance')
-                            )
-                        ),
-                    ),
-                    array(
-                        'type'    => 'switch',
-                        'label'   => $this->l('Enable \'Advanced checkout page\''),
-                        'hint'    => $this->l('The advanced checkout page displays the following sections: payment methods, address summary, ToS agreement, cart summary, and an \'Order with Obligation to Pay\' button.',
-                                              'ps_legalcompliance'),
-                        'name'    => 'AEUC_FEAT_ADV_PAYMENT_API',
-                        'is_bool' => true,
-                        'desc'    => $this->l('To address some of the latest European legal requirements, the advanced checkout page displays additional information (terms of service, payment methods, etc) as a single page.',
                                               'ps_legalcompliance'),
                         'values'  => array(
                             array(
@@ -1566,9 +1231,7 @@ class Ps_LegalCompliance extends Module
     protected function getConfigFormFeaturesManagerValues()
     {
         return array(
-            'AEUC_FEAT_TELL_A_FRIEND'   => Configuration::get('AEUC_FEAT_TELL_A_FRIEND'),
             'AEUC_FEAT_REORDER'         => !Configuration::get('PS_DISALLOW_HISTORY_REORDERING'),
-            'AEUC_FEAT_ADV_PAYMENT_API' => Configuration::get('AEUC_FEAT_ADV_PAYMENT_API'),
             'PS_ATCP_SHIPWRAP'          => Configuration::get('PS_ATCP_SHIPWRAP'),
         );
     }

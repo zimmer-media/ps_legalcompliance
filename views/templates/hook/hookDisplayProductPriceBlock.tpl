@@ -59,13 +59,6 @@
         </div>
     {/if}
 
-    {* "Weight" Price Hook templating *}
-    {if isset($smartyVars.weight) && isset($smartyVars.weight.rounded_weight_str_i18n)}
-        <div class="aeuc_weight_label">
-            {$smartyVars.weight.rounded_weight_str_i18n|escape:'htmlall'}
-        </div>
-    {/if}
-
     {* "Delivery Estimation" Price Hook templating *}
     {if isset($smartyVars.after_price) && isset($smartyVars.after_price.delivery_str_i18n)}
         <div class="aeuc_delivery_label">
