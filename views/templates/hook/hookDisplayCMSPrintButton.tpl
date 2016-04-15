@@ -1,4 +1,4 @@
-/**
+{**
  * 2007-2016 PrestaShop
  *
  * NOTICE OF LICENSE
@@ -21,49 +21,6 @@
  *  @copyright  2007-2016 PrestaShop SA
  *  @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  *  International Registered Trademark & Property of PrestaShop SA
- */
+ *}
 
-span.aeuc_from_label,
-span.aeuc_before_label,
-span.aeuc_tax_label,
-div.aeuc_tax_label,
-div.aeuc_shipping_label,
-div.aeuc_weight_label,
-div.aeuc_delivery_label{
-    color: #554f58;
-    font-size: 12px;
-}
-
-span.aeuc_tax_label_shopping_cart {
-    color: #554f58 !important;
-    font-size: 12px !important;
-}
-
-span.aeuc_tax_label_blockcart {
-    color: #fff !important;
-}
-
-div.aeuc_shipping_label {
-    text-decoration: underline;
-    background-color: white;
-    display: inline-block;
-    padding: 1px 5px;
-}
-
-.content_price > span {
-	display:inline-block;
-}
-
-span.unvisible {
-	display: none; 
-}
-
-p.payment_selected > a.payment_module_adv {
-    border: 1px solid #55c65e;
-    border-radius: 4px;
-}
-
-a.payment_module_adv {
-    border: 1px solid #d6d4d4;
-    border-radius: 4px;
-}
+<input type="submit" name="printCMSPage" value="{l s='Print this page' mod='ps_legalcompliance'}" class="btn btn-secondary" onclick="window.print()" />

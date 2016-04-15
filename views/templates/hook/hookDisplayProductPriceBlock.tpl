@@ -38,17 +38,6 @@
         </span>
     {/if}
 
-    {* "Tax Inc/Exc" Price Hook templating *}
-    {if isset($smartyVars.price) && isset($smartyVars.price.tax_str_i18n)}
-        <span class={if isset($smartyVars.price.css_class)}
-                        "{$smartyVars.price.css_class|escape:'htmlall'}"
-                    {else}
-                        "aeuc_tax_label"
-                    {/if}>
-            {$smartyVars.price.tax_str_i18n|escape:'htmlall'}
-        </span>
-    {/if}
-
     {* "Shipping CMS content" Price Hook templating *}
     {if isset($smartyVars.ship) && isset($smartyVars.ship.link_ship_pay) &&
     isset($smartyVars.ship.ship_str_i18n)}
@@ -56,6 +45,13 @@
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
+        </div>
+    {/if}
+
+    {* "Tax in Listing" Price Hook templating *}
+    {if isset($smartyVars.list_taxes) && isset($smartyVars.list_taxes.tax_str_i18n)}
+        <div class="aeuc_tax_label">
+            {$smartyVars.list_taxes.tax_str_i18n|escape:'htmlall'}
         </div>
     {/if}
 

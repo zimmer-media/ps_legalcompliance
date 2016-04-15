@@ -100,6 +100,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
+                  $this->registerHook('displayCMSPrintButton') &&
                   $this->createConfig();
 
         $this->emptyTemplatesCache();
@@ -448,7 +449,26 @@ class Ps_LegalCompliance extends Module
         if (isset($this->context->controller->php_self) && in_array($this->context->controller->php_self, $css_required)) {
             $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
         }
+        
+        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'cms')) {
+            if ($this->isPrintableCMSPage()) {             
+                $this->context->controller->addCSS($this->_path . 'views/css/aeuc_print.css', 'print');
+            }
+        }
 
+    }
+    
+    protected function isPrintableCMSPage()
+    {
+        $printable_cms_pages = array();
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        foreach (array(self::LEGAL_CONDITIONS, self::LEGAL_REVOCATION, self::LEGAL_SHIP_PAY, self::LEGAL_PRIVACY) as $cms_page_name) {            
+            $cms_page_associated = $cms_role_repository->findOneByName($cms_page_name);
+            if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {
+                $printable_cms_pages[] = (int)$cms_page_associated->id_cms;
+            }
+        }
+        return in_array(Tools::getValue('id_cms'), $printable_cms_pages);
     }
 
     public function hookOverrideTOSDisplay($param)
@@ -517,6 +537,13 @@ class Ps_LegalCompliance extends Module
 
         return $this->display(__FILE__, 'hookOverrideTOSDisplay.tpl');
     }
+    
+    public function hookDisplayCMSPrintButton($param)
+    {
+        if ($this->isPrintableCMSPage()) {
+            return $this->display(__FILE__, 'hookDisplayCMSPrintButton.tpl');
+        }
+    }
 
     public function hookDisplayProductPriceBlock($param)
     {
@@ -571,28 +598,11 @@ class Ps_LegalCompliance extends Module
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
 
-        /* Handle taxes  Inc./Exc. and Shipping Inc./Exc.*/
+        /* Handle Shipping Inc./Exc.*/
         if ($param['type'] == 'price') {
             $smartyVars['price'] = array();
             $need_shipping_label = true;
 
-            if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
-
-                $customer_default_group_id = (int)$this->context->customer->id_default_group;
-                $customer_default_group = new Group($customer_default_group_id);
-
-                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
-                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
-                    $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'ps_legalcompliance');
-                } else {
-                    $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'ps_legalcompliance');
-                }
-
-                if (isset($param['from']) && $param['from'] == 'blockcart') {
-                    $smartyVars['price']['css_class'] = 'aeuc_tax_label_blockcart';
-                    $need_shipping_label = false;
-                }
-            }
             if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true && $need_shipping_label === true) {
 
                 if (!$product->is_virtual) {
@@ -641,6 +651,24 @@ class Ps_LegalCompliance extends Module
 
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
+        
+        /* Handle Taxes Inc./Exc.*/
+        if ($param['type'] == 'list_taxes') {
+            $smartyVars['list_taxes'] = array();
+            if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
+            
+                $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                $customer_default_group = new Group($customer_default_group_id);
+            
+                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                    $smartyVars['list_taxes']['tax_str_i18n'] = $this->l('Tax included', 'ps_legalcompliance');
+                } else {
+                    $smartyVars['list_taxes']['tax_str_i18n'] = $this->l('Tax excluded', 'ps_legalcompliance');
+                }
+            }
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+        }
     }
 
     private function emptyTemplatesCache()
@@ -651,10 +679,13 @@ class Ps_LegalCompliance extends Module
 
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
+        $keys = array_keys($smartyVars);
+        $hook_type = array_shift($keys);
+        $cache_id = sha1($hook_type);
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
-        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl');
+        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl', $cache_id);
     }
 
     /**
@@ -739,7 +770,6 @@ class Ps_LegalCompliance extends Module
 
         if (count($i10n_inputs_received) > 0) {
             $this->processAeucLabelDeliveryTime($i10n_inputs_received);
-            $this->processAeucShoppingCartText($i10n_inputs_received);
             $has_processed_something = true;
         }
 
@@ -859,6 +889,12 @@ class Ps_LegalCompliance extends Module
 
     protected function processAeucLabelTaxIncExc($is_option_active)
     {
+        $countries = Country::getCountries((int)Context::getContext()->language->id, true);
+        foreach ($countries as $id_country => $country_row) {
+            $country = new Country($id_country);
+            $country->display_tax_label = (bool)$is_option_active;
+            $country->save();
+        }
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
     
@@ -985,6 +1021,8 @@ class Ps_LegalCompliance extends Module
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
                                                              'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).',
+                                                                                   'ps_legalcompliance'),
+                                                             'hint'    => $this->l('Hint, content still to be delivered by PrestaShop',
                                                                                    'ps_legalcompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
