@@ -191,16 +191,16 @@ class Ps_LegalCompliance extends Module
 
         foreach ($langs as $lang) {
             $delivery_time_available_values[(int)$lang->id] = $this->l('Delivery: 1 to 3 weeks', 'ps_legalcompliance');
-            $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');            
+            $delivery_time_oos_values[(int)$lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');
         }
 
-        /* Base settings */        
+        /* Base settings */
         $this->processAeucFeatReorder(true);
         $this->processAeucLabelRevocationTOS(false);
         $this->processAeucLabelRevocationVP(false);
         $this->processAeucLabelSpecificPrice(true);
         $this->processAeucLabelTaxIncExc(true);
-        $this->processAeucLabelShippingIncExc(false);        
+        $this->processAeucLabelShippingIncExc(false);
         $this->processAeucLabelCombinationFrom(true);
 
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
@@ -280,7 +280,7 @@ class Ps_LegalCompliance extends Module
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
-               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&               
+               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
@@ -651,10 +651,13 @@ class Ps_LegalCompliance extends Module
 
     private function dumpHookDisplayProductPriceBlock(array $smartyVars)
     {
+        $keys = array_keys($smartyVars);
+        $hook_type = array_shift($keys);
+        $cache_id = sha1($hook_type);
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
 
-        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl');
+        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl', $cache_id);
     }
 
     /**
@@ -662,7 +665,7 @@ class Ps_LegalCompliance extends Module
      */
     public function getContent()
     {
-        $theme_warning = null;        
+        $theme_warning = null;
         $success_band = $this->_postProcess();
 
         $this->context->smarty->assign('module_dir', $this->_path);
@@ -861,7 +864,7 @@ class Ps_LegalCompliance extends Module
     {
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
-    
+
     protected function processPsAtcpShipWrap($is_option_active)
     {
         Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);
@@ -1173,7 +1176,7 @@ class Ps_LegalCompliance extends Module
                     'title' => $this->l('Features', 'ps_legalcompliance'),
                     'icon'  => 'icon-cogs',
                 ),
-                'input'  => array(                    
+                'input'  => array(
                     array(
                         'type'    => 'switch',
                         'label'   => $this->l('Enable \'Reordering\' feature', 'ps_legalcompliance'),
