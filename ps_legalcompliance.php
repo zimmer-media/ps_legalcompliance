@@ -101,6 +101,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->registerHook('displayCMSPrintButton') &&
+                  $this->registerHook('displayCMSDisputeInformation') &&
                   $this->createConfig();
 
         $this->emptyTemplatesCache();
@@ -469,6 +470,17 @@ class Ps_LegalCompliance extends Module
             }
         }
         return in_array(Tools::getValue('id_cms'), $printable_cms_pages);
+    }
+    
+    public function hookDisplayCMSDisputeInformation($params)
+    {
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_NOTICE);
+        if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {            
+            if (Tools::getValue('id_cms') == $cms_page_associated->id_cms) {
+                return $this->display(__FILE__, 'hookDisplayCMSDisputeInformation.tpl');
+            }
+        }
     }
 
     public function hookOverrideTOSDisplay($param)
