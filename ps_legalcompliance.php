@@ -82,6 +82,7 @@ class Ps_LegalCompliance extends Module
 
         /* Init errors var */
         $this->_errors = array();
+        
     }
 
     /**
@@ -102,7 +103,8 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->registerHook('displayCMSPrintButton') &&
                   $this->registerHook('displayCMSDisputeInformation') &&
-                  $this->createConfig();
+                  $this->createConfig() &&
+                  $this->generateAndLinkCMSPages();
 
         $this->emptyTemplatesCache();
 
@@ -213,6 +215,48 @@ class Ps_LegalCompliance extends Module
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
                Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
+    }
+    
+    public function generateAndLinkCMSPages()
+    {
+        $cms_pages = array(
+            self::LEGAL_NOTICE => array('meta_title' => $this->l('Legal notice', 'ps_legalcompliance'), 
+                                        'link_rewrite' => 'legal-notice', 
+                                        'content' => $this->l('Please add your legal informations to this site.', 'ps_legalcompliance')),
+            self::LEGAL_CONDITIONS => array('meta_title' => $this->l('Terms of Service (ToS)', 'ps_legalcompliance'), 
+                                            'link_rewrite' => 'terms-of-service-tos', 
+                                            'content' => $this->l('Please add your Terms of Service (ToS) to this site.', 'ps_legalcompliance')),
+            self::LEGAL_REVOCATION => array('meta_title' => $this->l('Revocation terms', 'ps_legalcompliance'), 
+                                            'link_rewrite' => 'revocation-terms', 
+                                            'content' => $this->l('Please add your Revocation terms to this site.', 'ps_legalcompliance')),
+            self::LEGAL_PRIVACY => array('meta_title' => $this->l('Privacy', 'ps_legalcompliance'), 
+                                        'link_rewrite' => 'privacy', 
+                                        'content' => $this->l('Please add your Privacy informations to this site.', 'ps_legalcompliance')),
+            self::LEGAL_SHIP_PAY => array('meta_title' => $this->l('Shipping and payment', 'ps_legalcompliance'), 
+                                          'link_rewrite' => 'shipping-and-payment', 
+                                          'content' => $this->l('Please add your Shipping and payment informations to this site.', 'ps_legalcompliance')),
+        );
+
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+                
+        $langs_repository = $this->entity_manager->getRepository('Language');
+        $langs = $langs_repository->findAll();        
+        
+        foreach ($cms_pages as $cms_page_role => $cms_page) {
+            $cms = new CMS();
+            $cms->id_cms_category = 1;
+            foreach ($langs as $lang) {
+                $cms->meta_title[(int)$lang->id] = $cms_page['meta_title'];
+                $cms->link_rewrite[(int)$lang->id] = $cms_page['link_rewrite'];
+                $cms->content[(int)$lang->id] = $cms_page['content'];                
+            }
+            $cms->active = 1;
+            $cms->add();            
+            $cms_role = $cms_role_repository->findOneByName($cms_page_role);
+            $cms_role->id_cms = (int)$cms->id;
+            $cms_role->update();
+        }
+        return true;
     }
 
     public function unloadTables()
