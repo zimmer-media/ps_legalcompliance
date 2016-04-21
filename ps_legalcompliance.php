@@ -82,7 +82,6 @@ class Ps_LegalCompliance extends Module
 
         /* Init errors var */
         $this->_errors = array();
-        
     }
 
     /**
@@ -97,6 +96,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerModulesBackwardCompatHook() &&
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
+                  $this->registerHook('displayFooter') &&
                   $this->registerHook('overrideTOSDisplay') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
@@ -388,6 +388,34 @@ class Ps_LegalCompliance extends Module
 
 
         return $this->display(__FILE__, 'displayCartTotalPriceLabel.tpl');
+    }
+    
+    public function hookDisplayFooter($param)
+    {
+        $cms_roles_to_be_displayed = array(self::LEGAL_NOTICE,
+            self::LEGAL_CONDITIONS,
+            self::LEGAL_REVOCATION,
+            self::LEGAL_PRIVACY,
+            self::LEGAL_SHIP_PAY,
+            self::LEGAL_ENVIRONMENTAL);
+        
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_pages_associated = $cms_role_repository->findByName($cms_roles_to_be_displayed);
+        $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+        $cms_links = array();
+        foreach ($cms_pages_associated as $cms_page_associated) {            
+            if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {                
+                $cms = new CMS((int)$cms_page_associated->id_cms);
+                $cms_links[] = array('link' => $this->context->link->getCMSLink($cms->id, null, $is_ssl_enabled),
+                                     'id' => 'cms-page-' . $cms->id,
+                                     'title' => $cms->meta_title[$this->context->language->id],
+                                     'desc' => $cms->meta_description[$this->context->language->id]
+                );
+            }
+        }
+        $this->context->smarty->assign('cms_links', $cms_links);
+        
+        return $this->display(__FILE__, 'hookDisplayFooter.tpl');
     }
 
     /* This hook is present to maintain backward compatibility */
