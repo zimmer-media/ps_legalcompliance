@@ -235,6 +235,9 @@ class Ps_LegalCompliance extends Module
             self::LEGAL_SHIP_PAY => array('meta_title' => $this->l('Shipping and payment', 'ps_legalcompliance'), 
                                           'link_rewrite' => 'shipping-and-payment', 
                                           'content' => $this->l('Please add your Shipping and payment informations to this site.', 'ps_legalcompliance')),
+            self::LEGAL_ENVIRONMENTAL => array('meta_title' => $this->l('Environmental notice', 'ps_legalcompliance'), 
+                                               'link_rewrite' => 'environmental-notice', 
+                                               'content' => $this->l('Please add your Environmental informations to this site.', 'ps_legalcompliance')),
         );
 
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
