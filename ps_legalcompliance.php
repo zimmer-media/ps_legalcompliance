@@ -450,11 +450,9 @@ class Ps_LegalCompliance extends Module
                     $newOptions[] = $option;
                 }
             }
-
-            return $newOptions;
         }
 
-        return null;
+        return $newOptions;
     }
 
     public function hookActionEmailAddAfterContent($param)
