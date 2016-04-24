@@ -246,18 +246,20 @@ class Ps_LegalCompliance extends Module
         $langs = $langs_repository->findAll();        
         
         foreach ($cms_pages as $cms_page_role => $cms_page) {
-            $cms = new CMS();
-            $cms->id_cms_category = 1;
-            foreach ($langs as $lang) {
-                $cms->meta_title[(int)$lang->id] = $cms_page['meta_title'];
-                $cms->link_rewrite[(int)$lang->id] = $cms_page['link_rewrite'];
-                $cms->content[(int)$lang->id] = $cms_page['content'];                
-            }
-            $cms->active = 1;
-            $cms->add();            
             $cms_role = $cms_role_repository->findOneByName($cms_page_role);
-            $cms_role->id_cms = (int)$cms->id;
-            $cms_role->update();
+            if ((int)$cms_role->id_cms == 0) {
+                $cms = new CMS();
+                $cms->id_cms_category = 1;
+                foreach ($langs as $lang) {
+                    $cms->meta_title[(int)$lang->id] = $cms_page['meta_title'];
+                    $cms->link_rewrite[(int)$lang->id] = 'aeu-legal-' . $cms_page['link_rewrite'];
+                    $cms->content[(int)$lang->id] = $cms_page['content'];                
+                }
+                $cms->active = 1;
+                $cms->add();            
+                $cms_role->id_cms = (int)$cms->id;
+                $cms_role->update();
+            }
         }
         return true;
     }

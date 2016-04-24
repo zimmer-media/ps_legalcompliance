@@ -28,7 +28,7 @@
  	<ul>
  		{foreach from=$cms_links item=cms_link}
  			<li>
- 				<a href="{$cms_link.link}" class="cms-page-link" title="{$cms_link.description}" id="{$cms_link.id}"> {$cms_link.title} </a>
+ 				<a href="{$cms_link.link}" class="cms-page-link" title="{$cms_link.description|default:''}" id="{$cms_link.id}"> {$cms_link.title} </a>
  			</li>
  		{/foreach}
  	</ul>
