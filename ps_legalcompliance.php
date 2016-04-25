@@ -566,7 +566,8 @@ class Ps_LegalCompliance extends Module
         $cms_repository = $this->entity_manager->getRepository('CMS');
         // Check first if LEGAL_REVOCATION CMS Role is set
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
 
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
@@ -582,8 +583,8 @@ class Ps_LegalCompliance extends Module
         $link_revocations = '';
 
         // Get IDs of CMS pages required
-        $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
-        $cms_revocation_id = (int)$cms_page_associated->id_cms;
+        $cms_conditions_id = (int)$cms_page_conditions_associated->id_cms > 0 ? (int)$cms_page_conditions_associated->id_cms : Configuration::get('PS_CONDITIONS_CMS_ID');
+        $cms_revocation_id = (int)$cms_page_revocation_associated->id_cms;
 
         // Get misc vars
         $id_lang = (int)$this->context->language->id;
