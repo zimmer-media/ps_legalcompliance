@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
- <div class="linklist euAboutUsCMS col-md-2">
+ <div class="euAboutUsCMS col-md-2">
  	<h3 class="h3">{l s='About us' mod='ps_legalcompliance'}</h3>
  	<ul>
  		{foreach from=$cms_links item=cms_link}

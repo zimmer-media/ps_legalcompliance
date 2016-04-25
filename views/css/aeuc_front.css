@@ -67,3 +67,13 @@ a.payment_module_adv {
     border: 1px solid #d6d4d4;
     border-radius: 4px;
 }
+
+.euAboutUsCMS {
+  padding-top: 0px; }
+  .euAboutUsCMS li a {
+    color: #acaaa6;
+    cursor: pointer; }
+    .euAboutUsCMS li a:hover {
+      color: #2fb5d2; }
+  .euAboutUsCMS .cms-page-link a {
+    color: #414141; }
