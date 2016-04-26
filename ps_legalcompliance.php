@@ -315,19 +315,6 @@ class Ps_LegalCompliance extends Module
 
     public function dropConfig()
     {
-        // Remove roles
-        $roles_array = $this->getCMSRoles();
-        $roles = array_keys($roles_array);
-        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cleaned = true;
-
-        foreach ($roles as $role) {
-            $cms_role_tmp = $cms_role_repository->findOneByName($role);
-            if ($cms_role_tmp) {
-                $cleaned &= $cms_role_tmp->delete();
-            }
-        }
-
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
