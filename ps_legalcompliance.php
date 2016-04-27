@@ -712,7 +712,7 @@ class Ps_LegalCompliance extends Module
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
 
-        /* Handle Estimated delivery time label */
+        /* Handle Delivery time label */
         if ($param['type'] == 'after_price' && !$product->is_virtual) {
             $context_id_lang = $this->context->language->id;
             $is_product_available = (StockAvailable::getQuantityAvailableByProduct($product->id) >= 1 ? true : false);
@@ -1060,18 +1060,18 @@ class Ps_LegalCompliance extends Module
         ),
                                      'input'  => array(array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (available products)',
+                                                             'label' => $this->l('Delivery time label (available products)',
                                                                                  'ps_legalcompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.',
+                                                             'desc'  => $this->l('Indicate the delivery time for your in-stock products. Leave the field empty to disable.',
                                                                                  'ps_legalcompliance'),
                                                        ),
                                                        array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (out-of-stock products)',
+                                                             'label' => $this->l('Delivery time label (out-of-stock products)',
                                                                                  'ps_legalcompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.',
+                                                             'desc'  => $this->l('Indicate the delivery time for your out-of-stock products. Leave the field empty to disable.',
                                                                                  'ps_legalcompliance'),
                                                        ),
                                                        array('type'    => 'switch',
