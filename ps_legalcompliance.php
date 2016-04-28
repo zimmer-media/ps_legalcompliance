@@ -203,6 +203,7 @@ class Ps_LegalCompliance extends Module
         $this->processAeucLabelRevocationTOS(false);
         $this->processAeucLabelRevocationVP(false);
         $this->processAeucLabelSpecificPrice(true);
+        $this->processAeucLabelUnitPrice(true);
         $this->processAeucLabelTaxIncExc(true);
         $this->processAeucLabelShippingIncExc(false);        
         $this->processAeucLabelCombinationFrom(true);
@@ -210,6 +211,7 @@ class Ps_LegalCompliance extends Module
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
                Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+               Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
@@ -319,6 +321,7 @@ class Ps_LegalCompliance extends Module
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
+               Configuration::deleteByName('AEUC_LABEL_UNIT_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&               
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
@@ -747,6 +750,29 @@ class Ps_LegalCompliance extends Module
             }
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
+        
+        /* Handle Unit prices */
+        if ($param['type'] == 'unit_price') {
+            if ((!empty($product->unity) && $product->unit_price_ratio > 0.000000)) {                
+                $smartyVars['unit_price'] = array();
+                if ((bool)Configuration::get('AEUC_LABEL_UNIT_PRICE') === true) {
+                    if (isset($param['returntype']) && $param['returntype'] == 'style') {
+                        return 'style="display:none;"';
+                    } else {
+                        $priceDisplay = Product::getTaxCalculationMethod((int)$this->context->cookie->id_customer);
+                        if (!$priceDisplay || $priceDisplay == 2) {
+                            $productPrice = $product->getPrice(true, null, 6);
+                        } else {
+                            $productPrice = $product->getPrice(false, null, 6);
+                        }
+                        $smartyVars['unit_price']['unit_price'] = ($product->unit_price_ratio > 0) ? ($productPrice / $product->unit_price_ratio) : 0;
+                        $smartyVars['unit_price']['unity'] = $product->unity;
+                    }
+                }
+                return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            }                
+        }
+        
     }
 
     private function emptyTemplatesCache()
@@ -976,6 +1002,11 @@ class Ps_LegalCompliance extends Module
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
     }
     
+    protected function processAeucLabelUnitPrice($is_option_active)
+    {
+        Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', $is_option_active);
+    }
+    
     protected function processPsAtcpShipWrap($is_option_active)
     {
         Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);
@@ -1099,6 +1130,27 @@ class Ps_LegalCompliance extends Module
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
                                                              'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).',
+                                                                                   'ps_legalcompliance'),
+                                                             'hint'    => $this->l('Hint, content still to be delivered by PrestaShop',
+                                                                                   'ps_legalcompliance'),
+                                                             'values'  => array(array('id'    => 'active_on',
+                                                                                      'value' => true,
+                                                                                      'label' => $this->l('Enabled',
+                                                                                                          'ps_legalcompliance')
+                                                                                ),
+                                                                                array('id'    => 'active_off',
+                                                                                      'value' => false,
+                                                                                      'label' => $this->l('Disabled',
+                                                                                                          'ps_legalcompliance')
+                                                                                )
+                                                             ),
+                                                       ),
+                                                       array('type'    => 'switch',
+                                                             'label'   => $this->l('Display unit price in product listings',
+                                                                                   'ps_legalcompliance'),
+                                                             'name'    => 'AEUC_LABEL_UNIT_PRICE',
+                                                             'is_bool' => true,
+                                                             'desc'    => $this->l('Help text, content still to be delivered by PrestaShop).',
                                                                                    'ps_legalcompliance'),
                                                              'hint'    => $this->l('Hint, content still to be delivered by PrestaShop',
                                                                                    'ps_legalcompliance'),
@@ -1241,6 +1293,7 @@ class Ps_LegalCompliance extends Module
             'AEUC_LABEL_DELIVERY_TIME_AVAILABLE' => $delivery_time_available_values,
             'AEUC_LABEL_DELIVERY_TIME_OOS'       => $delivery_time_oos_values,
             'AEUC_LABEL_SPECIFIC_PRICE'          => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
+            'AEUC_LABEL_UNIT_PRICE'              => Configuration::get('AEUC_LABEL_UNIT_PRICE'),
             'AEUC_LABEL_TAX_INC_EXC'             => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
             'AEUC_LABEL_REVOCATION_TOS'          => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
             'AEUC_LABEL_REVOCATION_VP'           => Configuration::get('AEUC_LABEL_REVOCATION_VP'),

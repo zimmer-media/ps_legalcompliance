@@ -61,4 +61,11 @@
             {$smartyVars.after_price.delivery_str_i18n|escape:'htmlall'}
         </div>
     {/if}
+
+    {* "Unit Price" Price Hook templating *}
+    {if isset($smartyVars.unit_price) && isset($smartyVars.unit_price.unit_price)}    	
+        <div class="aeuc_unit_price_label">
+            {convertPrice price=$smartyVars.unit_price.unit_price} {l s='per %s' sprintf=$smartyVars.unit_price.unity}
+        </div>
+    {/if}
 {/if}
