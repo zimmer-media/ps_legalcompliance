@@ -68,6 +68,11 @@ a.payment_module_adv {
     border-radius: 4px;
 }
 
+.products div.aeuc_unit_price_label {
+	font-size: 8px;
+	display: inline-block;
+	font-weight: normal;
+}
 
 body.tax-display-enabled #products .thumbnail-container, 
 body.tax-display-enabled .featured-products .thumbnail-container, 
