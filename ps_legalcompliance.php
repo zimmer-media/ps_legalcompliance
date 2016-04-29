@@ -505,20 +505,8 @@ class Ps_LegalCompliance extends Module
 
     public function hookHeader($param)
     {
-        $css_required = array(
-            'index',
-            'product',
-            'order',
-            'order-opc',
-            'category',
-            'products-comparison',
+        $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
 
-        );
-
-        if (isset($this->context->controller->php_self) && in_array($this->context->controller->php_self, $css_required)) {
-            $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
-        }
-        
         if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'cms')) {
             if ($this->isPrintableCMSPage()) {             
                 $this->context->controller->addCSS($this->_path . 'views/css/aeuc_print.css', 'print');
