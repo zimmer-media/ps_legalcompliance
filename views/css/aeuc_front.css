@@ -67,11 +67,21 @@ a.payment_module_adv {
     border: 1px solid #d6d4d4;
     border-radius: 4px;
 }
-
+#order-items div.aeuc_unit_price_label,
+.cart-overview div.aeuc_unit_price_label,
+#checkout-cart-summary div.aeuc_unit_price_label,
 .products div.aeuc_unit_price_label {
 	font-size: 8px;
 	display: inline-block;
 	font-weight: normal;
+}
+#checkout-cart-summary div.aeuc_unit_price_label {
+	float: right;
+}
+#blockcart-modal div.aeuc_unit_price_label {
+	font-size: 9px;
+	font-weight: normal;
+	margin-bottom: 8px;	
 }
 
 body.tax-display-enabled #products .thumbnail-container, 
