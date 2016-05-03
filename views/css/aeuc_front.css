@@ -44,11 +44,14 @@ span.aeuc_tax_label_blockcart {
 }
 
 div.aeuc_shipping_label {
-    text-decoration: underline;
-    background-color: white;
+    font-size: 8px;
     display: inline-block;
     padding: 1px 5px;
 }
+body#product div.aeuc_shipping_label {
+	display: block;
+    padding: 0;
+} 
 
 .content_price > span {
 	display:inline-block;
@@ -82,6 +85,9 @@ a.payment_module_adv {
 	font-size: 9px;
 	font-weight: normal;
 	margin-bottom: 8px;	
+}
+#product div.aeuc_unit_price_label {
+	padding-bottom: 16px;
 }
 
 body.tax-display-enabled #products .thumbnail-container, 
