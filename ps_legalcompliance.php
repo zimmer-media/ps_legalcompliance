@@ -103,6 +103,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->registerHook('displayCMSPrintButton') &&
                   $this->registerHook('displayCMSDisputeInformation') &&
+                  $this->registerhook('displayOverrideTemplate') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages();
 
@@ -381,6 +382,13 @@ class Ps_LegalCompliance extends Module
 
 
         return $this->display(__FILE__, 'displayCartTotalPriceLabel.tpl');
+    }
+    
+    public function hookDisplayOverrideTemplate($param)
+    {
+        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'order')) {
+            return $this->getTemplatePath('hookDisplayOverrideTemplateFooter.tpl');            
+        }
     }
     
     public function hookDisplayFooter($param)
