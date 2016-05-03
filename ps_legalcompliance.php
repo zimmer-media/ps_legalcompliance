@@ -96,11 +96,16 @@ class Ps_LegalCompliance extends Module
                   $this->registerModulesBackwardCompatHook() &&
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
+                  $this->registerHook('displayFooter') &&
                   $this->registerHook('overrideTOSDisplay') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
-                  $this->createConfig();
+                  $this->registerHook('displayCMSPrintButton') &&
+                  $this->registerHook('displayCMSDisputeInformation') &&
+                  $this->registerhook('displayOverrideTemplate') &&
+                  $this->createConfig() &&
+                  $this->generateAndLinkCMSPages();
 
         $this->emptyTemplatesCache();
 
@@ -199,6 +204,7 @@ class Ps_LegalCompliance extends Module
         $this->processAeucLabelRevocationTOS(false);
         $this->processAeucLabelRevocationVP(false);
         $this->processAeucLabelSpecificPrice(true);
+        $this->processAeucLabelUnitPrice(true);
         $this->processAeucLabelTaxIncExc(true);
         $this->processAeucLabelShippingIncExc(false);
         $this->processAeucLabelCombinationFrom(true);
@@ -206,11 +212,60 @@ class Ps_LegalCompliance extends Module
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
                Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+               Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
                Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
+    }
+    
+    public function generateAndLinkCMSPages()
+    {
+        $cms_pages = array(
+            self::LEGAL_NOTICE => array('meta_title' => $this->l('Legal notice', 'ps_legalcompliance'), 
+                                        'link_rewrite' => 'legal-notice', 
+                                        'content' => $this->l('Please add your legal informations to this site.', 'ps_legalcompliance')),
+            self::LEGAL_CONDITIONS => array('meta_title' => $this->l('Terms of Service (ToS)', 'ps_legalcompliance'), 
+                                            'link_rewrite' => 'terms-of-service-tos', 
+                                            'content' => $this->l('Please add your Terms of Service (ToS) to this site.', 'ps_legalcompliance')),
+            self::LEGAL_REVOCATION => array('meta_title' => $this->l('Revocation terms', 'ps_legalcompliance'), 
+                                            'link_rewrite' => 'revocation-terms', 
+                                            'content' => $this->l('Please add your Revocation terms to this site.', 'ps_legalcompliance')),
+            self::LEGAL_PRIVACY => array('meta_title' => $this->l('Privacy', 'ps_legalcompliance'), 
+                                        'link_rewrite' => 'privacy', 
+                                        'content' => $this->l('Please insert here your content about privacy. If you have activated Social Media modules, please provide a notice about third-party access to data.', 
+                                            'ps_legalcompliance')),
+            self::LEGAL_SHIP_PAY => array('meta_title' => $this->l('Shipping and payment', 'ps_legalcompliance'), 
+                                          'link_rewrite' => 'shipping-and-payment', 
+                                          'content' => $this->l('Please add your Shipping and payment informations to this site.', 'ps_legalcompliance')),
+            self::LEGAL_ENVIRONMENTAL => array('meta_title' => $this->l('Environmental notice', 'ps_legalcompliance'), 
+                                               'link_rewrite' => 'environmental-notice', 
+                                               'content' => $this->l('Please add your Environmental informations to this site.', 'ps_legalcompliance')),
+        );
+
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+                
+        $langs_repository = $this->entity_manager->getRepository('Language');
+        $langs = $langs_repository->findAll();        
+        
+        foreach ($cms_pages as $cms_page_role => $cms_page) {
+            $cms_role = $cms_role_repository->findOneByName($cms_page_role);
+            if ((int)$cms_role->id_cms == 0) {
+                $cms = new CMS();
+                $cms->id_cms_category = 1;
+                foreach ($langs as $lang) {
+                    $cms->meta_title[(int)$lang->id] = $cms_page['meta_title'];
+                    $cms->link_rewrite[(int)$lang->id] = 'aeu-legal-' . $cms_page['link_rewrite'];
+                    $cms->content[(int)$lang->id] = $cms_page['content'];                
+                }
+                $cms->active = 1;
+                $cms->add();            
+                $cms_role->id_cms = (int)$cms->id;
+                $cms_role->update();
+            }
+        }
+        return true;
     }
 
     public function unloadTables()
@@ -264,22 +319,11 @@ class Ps_LegalCompliance extends Module
 
     public function dropConfig()
     {
-        // Remove roles
-        $roles_array = $this->getCMSRoles();
-        $roles = array_keys($roles_array);
-        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cleaned = true;
-
-        foreach ($roles as $role) {
-            $cms_role_tmp = $cms_role_repository->findOneByName($role);
-            if ($cms_role_tmp) {
-                $cleaned &= $cms_role_tmp->delete();
-            }
-        }
-
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
+               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
+               Configuration::deleteByName('AEUC_LABEL_UNIT_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
@@ -339,6 +383,41 @@ class Ps_LegalCompliance extends Module
 
 
         return $this->display(__FILE__, 'displayCartTotalPriceLabel.tpl');
+    }
+    
+    public function hookDisplayOverrideTemplate($param)
+    {
+        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'order')) {
+            return $this->getTemplatePath('hookDisplayOverrideTemplateFooter.tpl');            
+        }
+    }
+    
+    public function hookDisplayFooter($param)
+    {
+        $cms_roles_to_be_displayed = array(self::LEGAL_NOTICE,
+            self::LEGAL_CONDITIONS,
+            self::LEGAL_REVOCATION,
+            self::LEGAL_PRIVACY,
+            self::LEGAL_SHIP_PAY,
+            self::LEGAL_ENVIRONMENTAL);
+        
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_pages_associated = $cms_role_repository->findByName($cms_roles_to_be_displayed);
+        $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
+        $cms_links = array();
+        foreach ($cms_pages_associated as $cms_page_associated) {
+            if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {
+                $cms = new CMS((int)$cms_page_associated->id_cms);
+                $cms_links[] = array('link' => $this->context->link->getCMSLink($cms->id, null, $is_ssl_enabled),
+                                     'id' => 'cms-page-' . $cms->id,
+                                     'title' => $cms->meta_title[$this->context->language->id],
+                                     'desc' => $cms->meta_description[$this->context->language->id]
+                );
+            }
+        }
+        $this->context->smarty->assign('cms_links', $cms_links);
+        
+        return $this->display(__FILE__, 'hookDisplayFooter.tpl');
     }
 
     /* This hook is present to maintain backward compatibility */
@@ -433,20 +512,38 @@ class Ps_LegalCompliance extends Module
 
     public function hookHeader($param)
     {
-        $css_required = array(
-            'index',
-            'product',
-            'order',
-            'order-opc',
-            'category',
-            'products-comparison',
+        $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
 
-        );
-
-        if (isset($this->context->controller->php_self) && in_array($this->context->controller->php_self, $css_required)) {
-            $this->context->controller->addCSS($this->_path . 'views/css/aeuc_front.css', 'all');
+        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'cms')) {
+            if ($this->isPrintableCMSPage()) {             
+                $this->context->controller->addCSS($this->_path . 'views/css/aeuc_print.css', 'print');
+            }
         }
 
+    }
+    
+    protected function isPrintableCMSPage()
+    {
+        $printable_cms_pages = array();
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        foreach (array(self::LEGAL_CONDITIONS, self::LEGAL_REVOCATION, self::LEGAL_SHIP_PAY, self::LEGAL_PRIVACY) as $cms_page_name) {            
+            $cms_page_associated = $cms_role_repository->findOneByName($cms_page_name);
+            if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {
+                $printable_cms_pages[] = (int)$cms_page_associated->id_cms;
+            }
+        }
+        return in_array(Tools::getValue('id_cms'), $printable_cms_pages);
+    }
+    
+    public function hookDisplayCMSDisputeInformation($params)
+    {
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_NOTICE);
+        if ($cms_page_associated instanceof CMSRole && (int)$cms_page_associated->id_cms > 0) {            
+            if (Tools::getValue('id_cms') == $cms_page_associated->id_cms) {
+                return $this->display(__FILE__, 'hookDisplayCMSDisputeInformation.tpl');
+            }
+        }
     }
 
     public function hookOverrideTOSDisplay($param)
@@ -455,7 +552,8 @@ class Ps_LegalCompliance extends Module
         $cms_repository = $this->entity_manager->getRepository('CMS');
         // Check first if LEGAL_REVOCATION CMS Role is set
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
 
         // Check if cart has virtual product
         $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
@@ -471,8 +569,8 @@ class Ps_LegalCompliance extends Module
         $link_revocations = '';
 
         // Get IDs of CMS pages required
-        $cms_conditions_id = (int)Configuration::get('PS_CONDITIONS_CMS_ID');
-        $cms_revocation_id = (int)$cms_page_associated->id_cms;
+        $cms_conditions_id = (int)$cms_page_conditions_associated->id_cms > 0 ? (int)$cms_page_conditions_associated->id_cms : Configuration::get('PS_CONDITIONS_CMS_ID');
+        $cms_revocation_id = (int)$cms_page_revocation_associated->id_cms;
 
         // Get misc vars
         $id_lang = (int)$this->context->language->id;
@@ -514,6 +612,13 @@ class Ps_LegalCompliance extends Module
                                        ));
 
         return $this->display(__FILE__, 'hookOverrideTOSDisplay.tpl');
+    }
+    
+    public function hookDisplayCMSPrintButton($param)
+    {
+        if ($this->isPrintableCMSPage()) {
+            return $this->display(__FILE__, 'hookDisplayCMSPrintButton.tpl');
+        }
     }
 
     public function hookDisplayProductPriceBlock($param)
@@ -569,28 +674,11 @@ class Ps_LegalCompliance extends Module
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
 
-        /* Handle taxes  Inc./Exc. and Shipping Inc./Exc.*/
+        /* Handle Shipping Inc./Exc.*/
         if ($param['type'] == 'price') {
             $smartyVars['price'] = array();
             $need_shipping_label = true;
 
-            if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
-
-                $customer_default_group_id = (int)$this->context->customer->id_default_group;
-                $customer_default_group = new Group($customer_default_group_id);
-
-                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
-                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
-                    $smartyVars['price']['tax_str_i18n'] = $this->l('Tax included', 'ps_legalcompliance');
-                } else {
-                    $smartyVars['price']['tax_str_i18n'] = $this->l('Tax excluded', 'ps_legalcompliance');
-                }
-
-                if (isset($param['from']) && $param['from'] == 'blockcart') {
-                    $smartyVars['price']['css_class'] = 'aeuc_tax_label_blockcart';
-                    $need_shipping_label = false;
-                }
-            }
             if ((bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true && $need_shipping_label === true) {
 
                 if (!$product->is_virtual) {
@@ -622,7 +710,7 @@ class Ps_LegalCompliance extends Module
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
 
-        /* Handle Estimated delivery time label */
+        /* Handle Delivery time label */
         if ($param['type'] == 'after_price' && !$product->is_virtual) {
             $context_id_lang = $this->context->language->id;
             $is_product_available = (StockAvailable::getQuantityAvailableByProduct($product->id) >= 1 ? true : false);
@@ -639,6 +727,45 @@ class Ps_LegalCompliance extends Module
 
             return $this->dumpHookDisplayProductPriceBlock($smartyVars);
         }
+        
+        /* Handle Taxes Inc./Exc.*/
+        if ($param['type'] == 'list_taxes') {
+            $smartyVars['list_taxes'] = array();
+            if ((bool)Configuration::get('AEUC_LABEL_TAX_INC_EXC') === true) {
+            
+                $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                $customer_default_group = new Group($customer_default_group_id);
+            
+                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                    $smartyVars['list_taxes']['tax_str_i18n'] = $this->l('Tax included', 'ps_legalcompliance');
+                } else {
+                    $smartyVars['list_taxes']['tax_str_i18n'] = $this->l('Tax excluded', 'ps_legalcompliance');
+                }
+            }
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+        }
+        
+        /* Handle Unit prices */
+        if ($param['type'] == 'unit_price') {
+            if ((!empty($product->unity) && $product->unit_price_ratio > 0.000000)) {                
+                $smartyVars['unit_price'] = array();
+                if ((bool)Configuration::get('AEUC_LABEL_UNIT_PRICE') === true) {
+                    if (!(isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'product'))) {
+                        $priceDisplay = Product::getTaxCalculationMethod((int)$this->context->cookie->id_customer);
+                        if (!$priceDisplay || $priceDisplay == 2) {
+                            $productPrice = $product->getPrice(true, null, 6);
+                        } else {
+                            $productPrice = $product->getPrice(false, null, 6);
+                        }
+                        $smartyVars['unit_price']['unit_price'] = ($product->unit_price_ratio > 0) ? ($productPrice / $product->unit_price_ratio) : 0;
+                        $smartyVars['unit_price']['unity'] = $product->unity;
+                    }
+                }
+                return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            }                
+        }
+        
     }
 
     private function emptyTemplatesCache()
@@ -740,7 +867,6 @@ class Ps_LegalCompliance extends Module
 
         if (count($i10n_inputs_received) > 0) {
             $this->processAeucLabelDeliveryTime($i10n_inputs_received);
-            $this->processAeucShoppingCartText($i10n_inputs_received);
             $has_processed_something = true;
         }
 
@@ -860,7 +986,18 @@ class Ps_LegalCompliance extends Module
 
     protected function processAeucLabelTaxIncExc($is_option_active)
     {
+        $countries = Country::getCountries((int)Context::getContext()->language->id, true);
+        foreach ($countries as $id_country => $country_row) {
+            $country = new Country($id_country);
+            $country->display_tax_label = (bool)$is_option_active;
+            $country->save();
+        }
         Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', (bool)$is_option_active);
+    }
+
+    protected function processAeucLabelUnitPrice($is_option_active)
+    {
+        Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', $is_option_active);
     }
 
     protected function processPsAtcpShipWrap($is_option_active)
@@ -947,18 +1084,18 @@ class Ps_LegalCompliance extends Module
         ),
                                      'input'  => array(array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (available products)',
+                                                             'label' => $this->l('Delivery time label (available products)',
                                                                                  'ps_legalcompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_AVAILABLE',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your in-stock products. Leave the field empty to disable.',
+                                                             'desc'  => $this->l('Indicate the delivery time for your in-stock products. Leave the field empty to disable.',
                                                                                  'ps_legalcompliance'),
                                                        ),
                                                        array('type'  => 'text',
                                                              'lang'  => true,
-                                                             'label' => $this->l('Estimated delivery time label (out-of-stock products)',
+                                                             'label' => $this->l('Delivery time label (out-of-stock products)',
                                                                                  'ps_legalcompliance'),
                                                              'name'  => 'AEUC_LABEL_DELIVERY_TIME_OOS',
-                                                             'desc'  => $this->l('Indicate the estimated delivery time for your out-of-stock products. Leave the field empty to disable.',
+                                                             'desc'  => $this->l('Indicate the delivery time for your out-of-stock products. Leave the field empty to disable.',
                                                                                  'ps_legalcompliance'),
                                                        ),
                                                        array('type'    => 'switch',
@@ -986,6 +1123,29 @@ class Ps_LegalCompliance extends Module
                                                              'name'    => 'AEUC_LABEL_TAX_INC_EXC',
                                                              'is_bool' => true,
                                                              'desc'    => $this->l('Display whether the tax is included next to the product price (\'Tax included/excluded\' label).',
+                                                                                   'ps_legalcompliance'),
+                                                             'hint'    => $this->l('Hint, content still to be delivered by PrestaShop',
+                                                                                   'ps_legalcompliance'),
+                                                             'values'  => array(array('id'    => 'active_on',
+                                                                                      'value' => true,
+                                                                                      'label' => $this->l('Enabled',
+                                                                                                          'ps_legalcompliance')
+                                                                                ),
+                                                                                array('id'    => 'active_off',
+                                                                                      'value' => false,
+                                                                                      'label' => $this->l('Disabled',
+                                                                                                          'ps_legalcompliance')
+                                                                                )
+                                                             ),
+                                                       ),
+                                                       array('type'    => 'switch',
+                                                             'label'   => $this->l('Display unit price in product listings',
+                                                                                   'ps_legalcompliance'),
+                                                             'name'    => 'AEUC_LABEL_UNIT_PRICE',
+                                                             'is_bool' => true,
+                                                             'desc'    => $this->l('Help text, content still to be delivered by PrestaShop).',
+                                                                                   'ps_legalcompliance'),
+                                                             'hint'    => $this->l('Hint, content still to be delivered by PrestaShop',
                                                                                    'ps_legalcompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
@@ -1126,6 +1286,7 @@ class Ps_LegalCompliance extends Module
             'AEUC_LABEL_DELIVERY_TIME_AVAILABLE' => $delivery_time_available_values,
             'AEUC_LABEL_DELIVERY_TIME_OOS'       => $delivery_time_oos_values,
             'AEUC_LABEL_SPECIFIC_PRICE'          => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
+            'AEUC_LABEL_UNIT_PRICE'              => Configuration::get('AEUC_LABEL_UNIT_PRICE'),
             'AEUC_LABEL_TAX_INC_EXC'             => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
             'AEUC_LABEL_REVOCATION_TOS'          => Configuration::get('AEUC_LABEL_REVOCATION_TOS'),
             'AEUC_LABEL_REVOCATION_VP'           => Configuration::get('AEUC_LABEL_REVOCATION_VP'),
