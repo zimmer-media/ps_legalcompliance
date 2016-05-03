@@ -752,9 +752,7 @@ class Ps_LegalCompliance extends Module
             if ((!empty($product->unity) && $product->unit_price_ratio > 0.000000)) {                
                 $smartyVars['unit_price'] = array();
                 if ((bool)Configuration::get('AEUC_LABEL_UNIT_PRICE') === true) {
-                    if (isset($param['returntype']) && $param['returntype'] == 'style') {
-                        return 'style="display:none;"';
-                    } else {
+                    if (!(isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'product'))) {
                         $priceDisplay = Product::getTaxCalculationMethod((int)$this->context->cookie->id_customer);
                         if (!$priceDisplay || $priceDisplay == 2) {
                             $productPrice = $product->getPrice(true, null, 6);
