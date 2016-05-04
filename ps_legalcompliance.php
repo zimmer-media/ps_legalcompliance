@@ -628,6 +628,7 @@ class Ps_LegalCompliance extends Module
         }
 
         $product = $param['product'];
+        $hook_type = $param['type'];
 
         if (is_array($product)) {
             $product_repository = $this->entity_manager->getRepository('Product');
@@ -658,7 +659,7 @@ class Ps_LegalCompliance extends Module
                         $smartyVars['before_price'] = array();
                         $smartyVars['before_price']['from_str_i18n'] = $this->l('From', 'ps_legalcompliance');
 
-                        return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+                        return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
                     }
                 }
 
@@ -671,7 +672,7 @@ class Ps_LegalCompliance extends Module
             $smartyVars['old_price'] = array();
             $smartyVars['old_price']['before_str_i18n'] = $this->l('Before', 'ps_legalcompliance');
 
-            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
         }
 
         /* Handle Shipping Inc./Exc.*/
@@ -707,7 +708,7 @@ class Ps_LegalCompliance extends Module
                 }
             }
 
-            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
         }
 
         /* Handle Delivery time label */
@@ -725,7 +726,7 @@ class Ps_LegalCompliance extends Module
                 $smartyVars['after_price']['delivery_str_i18n'] = $contextualized_content;
             }
 
-            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
         }
         
         /* Handle Taxes Inc./Exc.*/
@@ -743,7 +744,7 @@ class Ps_LegalCompliance extends Module
                     $smartyVars['list_taxes']['tax_str_i18n'] = $this->l('Tax excluded', 'ps_legalcompliance');
                 }
             }
-            return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+            return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
         }
         
         /* Handle Unit prices */
@@ -762,7 +763,7 @@ class Ps_LegalCompliance extends Module
                         $smartyVars['unit_price']['unity'] = $product->unity;
                     }
                 }
-                return $this->dumpHookDisplayProductPriceBlock($smartyVars);
+                return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
             }                
         }
         
@@ -774,15 +775,14 @@ class Ps_LegalCompliance extends Module
         $this->_clearCache('product-list.tpl');
     }
 
-    private function dumpHookDisplayProductPriceBlock(array $smartyVars)
+    private function dumpHookDisplayProductPriceBlock(array $smartyVars, $hook_type)
     {
-        $keys = array_keys($smartyVars);
-        $hook_type = array_shift($keys);
         $cache_id = sha1($hook_type);
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
+        $template = 'hookDisplayProductPriceBlock_'.$hook_type.'.tpl';
 
-        return $this->display(__FILE__, 'hookDisplayProductPriceBlock.tpl', $cache_id);
+        return $this->display(__FILE__, $template, $cache_id);
     }
 
     /**

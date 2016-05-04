@@ -24,20 +24,6 @@
  *}
 
 {if isset($smartyVars)}
-    {* "From" Price Hook templating *}
-    {if isset($smartyVars.before_price) && isset($smartyVars.before_price.from_str_i18n)}
-        <span class="aeuc_from_label">
-            {$smartyVars.before_price.from_str_i18n|escape:'htmlall'}
-        </span>
-    {/if}
-
-    {* "Before" Price Hook templating *}
-    {if isset($smartyVars.old_price) && isset($smartyVars.old_price.before_str_i18n)}
-        <span class="aeuc_before_label">
-            {$smartyVars.old_price.before_str_i18n|escape:'htmlall'}
-        </span>
-    {/if}
-
     {* "Shipping CMS content" Price Hook templating *}
     {if isset($smartyVars.ship) && isset($smartyVars.ship.link_ship_pay) &&
     isset($smartyVars.ship.ship_str_i18n)}
@@ -45,27 +31,6 @@
             <a href="{$smartyVars.ship.link_ship_pay}" class="iframe">
                 {$smartyVars.ship.ship_str_i18n|escape:'htmlall'}
             </a>
-        </div>
-    {/if}
-
-    {* "Tax in Listing" Price Hook templating *}
-    {if isset($smartyVars.list_taxes) && isset($smartyVars.list_taxes.tax_str_i18n)}
-        <div class="aeuc_tax_label">
-            {$smartyVars.list_taxes.tax_str_i18n|escape:'htmlall'}
-        </div>
-    {/if}
-
-    {* "Delivery Estimation" Price Hook templating *}
-    {if isset($smartyVars.after_price) && isset($smartyVars.after_price.delivery_str_i18n)}
-        <div class="aeuc_delivery_label">
-            {$smartyVars.after_price.delivery_str_i18n|escape:'htmlall'}
-        </div>
-    {/if}
-
-    {* "Unit Price" Price Hook templating *}
-    {if isset($smartyVars.unit_price) && isset($smartyVars.unit_price.unit_price)}    	
-        <div class="aeuc_unit_price_label">
-            {convertPrice price=$smartyVars.unit_price.unit_price} {l s='per %s' sprintf=$smartyVars.unit_price.unity}
         </div>
     {/if}
 {/if}
