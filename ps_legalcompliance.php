@@ -97,7 +97,6 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('displayFooter') &&
-                  $this->registerHook('overrideTOSDisplay') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
@@ -544,74 +543,6 @@ class Ps_LegalCompliance extends Module
                 return $this->display(__FILE__, 'hookDisplayCMSDisputeInformation.tpl');
             }
         }
-    }
-
-    public function hookOverrideTOSDisplay($param)
-    {
-        $has_tos_override_opt = (bool)Configuration::get('AEUC_LABEL_REVOCATION_TOS');
-        $cms_repository = $this->entity_manager->getRepository('CMS');
-        // Check first if LEGAL_REVOCATION CMS Role is set
-        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
-        $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
-        $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
-
-        // Check if cart has virtual product
-        $has_virtual_product = (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart);
-        Media::addJsDef(array('aeuc_has_virtual_products' => (bool)$has_virtual_product,
-                              'aeuc_virt_prod_err_str' => Tools::htmlentitiesUTF8($this->l('Please check "Revocation of virtual products" box first !',
-                                                                                           'ps_legalcompliance'))));
-        if ($has_tos_override_opt || (bool)Configuration::get('AEUC_LABEL_REVOCATION_VP')) {
-            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
-        }
-
-        $checkedTos = false;
-        $link_conditions = '';
-        $link_revocations = '';
-
-        // Get IDs of CMS pages required
-        $cms_conditions_id = (int)$cms_page_conditions_associated->id_cms > 0 ? (int)$cms_page_conditions_associated->id_cms : Configuration::get('PS_CONDITIONS_CMS_ID');
-        $cms_revocation_id = (int)$cms_page_revocation_associated->id_cms;
-
-        // Get misc vars
-        $id_lang = (int)$this->context->language->id;
-        $id_shop = (int)$this->context->shop->id;
-        $is_ssl_enabled = (bool)Configuration::get('PS_SSL_ENABLED');
-        $checkedTos = $this->context->cart->checkedTos ? true : false;
-
-        // Get CMS OBJs
-        $cms_conditions = $cms_repository->i10nFindOneById($cms_conditions_id, $id_lang, $id_shop);
-        $link_conditions =
-            $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, $is_ssl_enabled);
-
-        if (!strpos($link_conditions, '?')) {
-            $link_conditions .= '?content_only=1';
-        } else {
-            $link_conditions .= '&content_only=1';
-        }
-
-        if ($has_tos_override_opt === true) {
-
-            $cms_revocations = $cms_repository->i10nFindOneById($cms_revocation_id, $id_lang, $id_shop);
-            // Get links to revocation page
-            $link_revocations =
-                $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
-
-            if (!strpos($link_revocations, '?')) {
-                $link_revocations .= '?content_only=1';
-            } else {
-                $link_revocations .= '&content_only=1';
-            }
-        }
-
-        $this->context->smarty->assign(array(
-                                           'has_tos_override_opt' => $has_tos_override_opt,
-                                           'checkedTOS'           => $checkedTos,
-                                           'link_conditions'      => $link_conditions,
-                                           'link_revocations'     => $link_revocations,
-                                           'has_virtual_product'  => $has_virtual_product
-                                       ));
-
-        return $this->display(__FILE__, 'hookOverrideTOSDisplay.tpl');
     }
     
     public function hookDisplayCMSPrintButton($param)
