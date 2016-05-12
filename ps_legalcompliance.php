@@ -32,6 +32,7 @@ if (!defined('_PS_VERSION_')) {
 use PrestaShop\PrestaShop\Core\Foundation\Database\EntityManager;
 use PrestaShop\PrestaShop\Core\Foundation\Filesystem\FileSystem;
 use PrestaShop\PrestaShop\Core\Email\EmailLister;
+use PrestaShop\PrestaShop\Core\Checkout\TermsAndConditions;
 
 /* Include required entities */
 include_once dirname(__FILE__) . '/entities/AeucCMSRoleEmailEntity.php';
@@ -102,6 +103,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->registerHook('displayCMSPrintButton') &&
                   $this->registerHook('displayCMSDisputeInformation') &&
+                  $this->registerHook('termsAndConditions') &&
                   $this->registerhook('displayOverrideTemplate') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages();
@@ -321,7 +323,6 @@ class Ps_LegalCompliance extends Module
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
-               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_UNIT_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
@@ -544,7 +545,61 @@ class Ps_LegalCompliance extends Module
             }
         }
     }
-
+    
+    public function hookTermsAndConditions($param)
+    {
+        $returned_terms_and_conditions = array();
+        
+        $cms_repository = $this->entity_manager->getRepository('CMS');
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
+        $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        
+        if ((int)$cms_page_conditions_associated->id_cms > 0 && (int)$cms_page_revocation_associated->id_cms > 0) {
+            $cms_conditions = $cms_repository->i10nFindOneById((int)$cms_page_conditions_associated->id_cms, 
+                                                               (int)$this->context->language->id,
+                                                               (int)$this->context->shop->id);
+            $link_conditions =
+                $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+            
+            $cms_revocation = $cms_repository->i10nFindOneById((int)$cms_page_revocation_associated->id_cms, 
+                                                               (int)$this->context->language->id,
+                                                               (int)$this->context->shop->id);
+            $link_revocation =
+                $this->context->link->getCMSLink($cms_revocation, $cms_revocation->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));    
+            
+            $termsAndConditions = new TermsAndConditions();
+            $termsAndConditions
+                ->setText(
+                    $this->l('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionnaly.', [], 'Checkout'),
+                    $link_conditions,
+                    $link_revocation
+                )
+                ->setIdentifier('terms-and-conditions')
+            ;        
+            $returned_terms_and_conditions[] = $termsAndConditions;
+        }
+                        
+        if ((bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart)) {
+            $termsAndConditions = new TermsAndConditions();
+        
+            $termsAndConditions
+                ->setText(
+                    $this->l('I agree to the starting of the contract and aknowledge that I lose my right to cancel once the download has begun or the service has been fully performed.', [], 'Checkout')
+                )
+                ->setIdentifier('virtual-products')
+            ;
+        
+            $returned_terms_and_conditions[] = $termsAndConditions;
+        }
+        
+        if (sizeof($returned_terms_and_conditions) > 0) {
+            return $returned_terms_and_conditions;
+        } else {        
+            return false;
+        }
+    }
+    
     public function hookDisplayCMSPrintButton($param)
     {
         if ($this->isPrintableCMSPage()) {
@@ -930,7 +985,7 @@ class Ps_LegalCompliance extends Module
     {
         Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', $is_option_active);
     }
-
+    
     protected function processPsAtcpShipWrap($is_option_active)
     {
         Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);

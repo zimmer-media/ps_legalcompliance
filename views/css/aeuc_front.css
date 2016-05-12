@@ -108,6 +108,10 @@ body.tax-display-enabled .product-accessories .product-description {
 	height: 90px;
 }
 
+div.condition-label label.js-terms {
+	text-align: left;
+}
+
 .euAboutUsCMS {
   padding-top: 0px; }
   .euAboutUsCMS li a {
