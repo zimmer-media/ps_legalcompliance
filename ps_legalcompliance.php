@@ -98,6 +98,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('displayFooter') &&
+                  $this->registerHook('displayFooterAfter') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
@@ -418,6 +419,42 @@ class Ps_LegalCompliance extends Module
         $this->context->smarty->assign('cms_links', $cms_links);
 
         return $this->display(__FILE__, 'hookDisplayFooter.tpl');
+    }
+    
+    public function hookDisplayFooterAfter($param)
+    {
+        if (isset($this->context->controller->php_self)) {
+            if (in_array($this->context->controller->php_self, array('index', 'category', 'prices-drop', 'new-products', 'best-sales', 'search'))) {
+                $cms_repository = $this->entity_manager->getRepository('CMS');
+                $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+                $cms_page_shipping_pay = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
+                
+                $link_shipping = false;
+                if ((int)$cms_page_shipping_pay->id_cms > 0) {
+                    $cms_shipping_pay = $cms_repository->i10nFindOneById((int)$cms_page_shipping_pay->id_cms,
+                        (int)$this->context->language->id,
+                        (int)$this->context->shop->id);
+                    $link_shipping =
+                        $this->context->link->getCMSLink($cms_shipping_pay, $cms_shipping_pay->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+                }                           
+                
+                $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                $customer_default_group = new Group($customer_default_group_id);
+                
+                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                        $tax_included = true;
+                } else {
+                    $tax_included = false;
+                }
+                
+                $this->context->smarty->assign('link_shipping', $link_shipping);
+                $this->context->smarty->assign('tax_included', $tax_included);
+                
+                return $this->display(__FILE__, 'hookDisplayFooterAfter.tpl');
+                
+            }
+        }
     }
 
     /* This hook is present to maintain backward compatibility */

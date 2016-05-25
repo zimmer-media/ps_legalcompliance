@@ -31,7 +31,7 @@ div.aeuc_shipping_label,
 div.aeuc_weight_label,
 div.aeuc_delivery_label{
     color: #554f58;
-    font-size: 12px;
+    font-size: 11px;
 }
 
 span.aeuc_tax_label_shopping_cart {
@@ -72,11 +72,16 @@ a.payment_module_adv {
 }
 #order-items div.aeuc_unit_price_label,
 .cart-overview div.aeuc_unit_price_label,
-#checkout-cart-summary div.aeuc_unit_price_label,
-.products div.aeuc_unit_price_label {
+#checkout-cart-summary div.aeuc_unit_price_label {
 	font-size: 8px;
 	display: inline-block;
 	font-weight: normal;
+}
+.products div.aeuc_unit_price_label {
+	font-size: 9px;
+	display: block;
+	font-weight: normal;
+	text-align: center;
 }
 #checkout-cart-summary div.aeuc_unit_price_label {
 	float: right;
@@ -110,6 +115,13 @@ body.tax-display-enabled .product-accessories .product-description {
 
 div.condition-label label.js-terms {
 	text-align: left;
+}
+
+div.aeuc_footer_info {
+	text-align: center;
+	font-size: 10px;
+	margin-top: 10px;
+	margin-bottom: 10px;
 }
 
 .euAboutUsCMS {
