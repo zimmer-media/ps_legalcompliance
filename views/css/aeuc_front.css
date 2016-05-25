@@ -124,6 +124,10 @@ div.aeuc_footer_info {
 	margin-bottom: 10px;
 }
 
+body#checkout #footer {
+	padding: 0;
+}
+
 .euAboutUsCMS {
   padding-top: 0px; }
   .euAboutUsCMS li a {
