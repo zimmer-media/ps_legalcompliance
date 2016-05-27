@@ -786,10 +786,9 @@ class Ps_LegalCompliance extends Module
                         $smartyVars['unit_price']['unity'] = $product->unity;
                     }
                 }
-                return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
+                return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type, $product->id);
             }
         }
-
     }
 
     private function emptyTemplatesCache()
@@ -798,9 +797,9 @@ class Ps_LegalCompliance extends Module
         $this->_clearCache('product-list.tpl');
     }
 
-    private function dumpHookDisplayProductPriceBlock(array $smartyVars, $hook_type)
+    private function dumpHookDisplayProductPriceBlock(array $smartyVars, $hook_type, $additional_cache_param = false)
     {
-        $cache_id = sha1($hook_type);
+        $cache_id = sha1($hook_type . $additional_cache_param);
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
         $template = 'hookDisplayProductPriceBlock_'.$hook_type.'.tpl';
