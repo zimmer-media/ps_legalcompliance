@@ -34,7 +34,10 @@
             {l s='Your country\'s legislation may require you to communicate some specific legal information to your customers.' mod='advancedeucompliance'}
         </p>
         <p>
-            {l s='For each of the topics below, indicate which of your CMS pages contains the required information:' mod='advancedeucompliance'}
+            {l s='The Legal Compliance module gives you the mean to display this information to your customer, using static pages  (some created on purpose by the module). It is your responsibility to fill in the corresponding pages with the required content.'}
+        </p>
+        <p>
+            {l s='For each of the topics below, first indicate which of your Pages contains the required information:' mod='advancedeucompliance'}
         </p>
         <br/>
         <div class="form-wrapper">
@@ -62,7 +65,7 @@
                 <i class="process-icon-save"></i>  {l s='Save' mod='advancedeucompliance'}
             </button>
             <a href="{$add_cms_link}" class="btn btn-default">
-                <i class="process-icon-plus"></i> {l s='Add new CMS Page' mod='advancedeucompliance'}
+                <i class="process-icon-plus"></i> {l s='Add new Page' mod='advancedeucompliance'}
             </a>
         </div>
 
