@@ -448,6 +448,7 @@ class Ps_LegalCompliance extends Module
                     $tax_included = false;
                 }
                 
+                $this->context->smarty->assign('show_shipping', (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true);
                 $this->context->smarty->assign('link_shipping', $link_shipping);
                 $this->context->smarty->assign('tax_included', $tax_included);
                 

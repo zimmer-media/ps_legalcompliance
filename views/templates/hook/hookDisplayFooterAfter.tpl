@@ -25,15 +25,18 @@
 
 <div class="aeuc_footer_info">
 	{if $tax_included}
-		{l s='All prices are mentioned tax included and '}
+		{l s='All prices are mentioned tax included' mod='ps_legalcompliance'}
 	{else}
-		{l s='All prices are mentioned tax excluded and '}
+		{l s='All prices are mentioned tax excluded' mod='ps_legalcompliance'}
 	{/if}
-	{if $link_shipping}
-		<a href="{$link_shipping}">
-	{/if}
-	{l s='shipping excluded'}
-	{if $link_shipping}
-		</a>
+	{if $show_shipping}
+		{l s='and' mod='ps_legalcompliance'}
+		{if $link_shipping}
+			<a href="{$link_shipping}">
+		{/if}
+		{l s='shipping excluded' mod='ps_legalcompliance'}
+		{if $link_shipping}
+			</a>
+		{/if}
 	{/if}
 </div>
