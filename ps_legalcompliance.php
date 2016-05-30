@@ -106,6 +106,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('displayCMSDisputeInformation') &&
                   $this->registerHook('termsAndConditions') &&
                   $this->registerhook('displayOverrideTemplate') &&
+                  $this->registerhook('displayCheckoutSummaryTop') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages();
 
@@ -391,6 +392,18 @@ class Ps_LegalCompliance extends Module
         if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'order')) {
             return $this->getTemplatePath('hookDisplayOverrideTemplateFooter.tpl');
         }
+    }
+    
+    public function hookDisplayCheckoutSummaryTop($param)
+    {
+        $cart_url = $this->context->link->getPageLink(
+            'cart',
+            null,
+            $this->context->language->id,
+            ['action' => 'show']
+            );        
+        $this->context->smarty->assign('link_shopping_cart', $cart_url);
+        return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
     }
 
     public function hookDisplayFooter($param)
