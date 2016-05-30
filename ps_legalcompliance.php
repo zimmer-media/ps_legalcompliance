@@ -789,6 +789,7 @@ class Ps_LegalCompliance extends Module
                 return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type, $product->id);
             }
         }
+ 
     }
 
     private function emptyTemplatesCache()
