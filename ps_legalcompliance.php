@@ -213,7 +213,7 @@ class Ps_LegalCompliance extends Module
 
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
-               Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+               Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
                Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
