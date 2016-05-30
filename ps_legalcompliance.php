@@ -32,6 +32,7 @@ if (!defined('_PS_VERSION_')) {
 use PrestaShop\PrestaShop\Core\Foundation\Database\EntityManager;
 use PrestaShop\PrestaShop\Core\Foundation\Filesystem\FileSystem;
 use PrestaShop\PrestaShop\Core\Email\EmailLister;
+use PrestaShop\PrestaShop\Core\Checkout\TermsAndConditions;
 
 /* Include required entities */
 include_once dirname(__FILE__) . '/entities/AeucCMSRoleEmailEntity.php';
@@ -97,12 +98,15 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('header') &&
                   $this->registerHook('displayProductPriceBlock') &&
                   $this->registerHook('displayFooter') &&
+                  $this->registerHook('displayFooterAfter') &&
                   $this->registerHook('actionEmailAddAfterContent') &&
                   $this->registerHook('advancedPaymentOptions') &&
                   $this->registerHook('displayCartTotalPriceLabel') &&
                   $this->registerHook('displayCMSPrintButton') &&
                   $this->registerHook('displayCMSDisputeInformation') &&
+                  $this->registerHook('termsAndConditions') &&
                   $this->registerhook('displayOverrideTemplate') &&
+                  $this->registerhook('displayCheckoutSummaryTop') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages();
 
@@ -210,7 +214,7 @@ class Ps_LegalCompliance extends Module
 
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
-               Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', true) &&
+               Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
                Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
@@ -321,7 +325,6 @@ class Ps_LegalCompliance extends Module
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
-               Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_UNIT_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_TOS') &&
@@ -390,6 +393,18 @@ class Ps_LegalCompliance extends Module
             return $this->getTemplatePath('hookDisplayOverrideTemplateFooter.tpl');
         }
     }
+    
+    public function hookDisplayCheckoutSummaryTop($param)
+    {
+        $cart_url = $this->context->link->getPageLink(
+            'cart',
+            null,
+            $this->context->language->id,
+            ['action' => 'show']
+            );        
+        $this->context->smarty->assign('link_shopping_cart', $cart_url);
+        return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
+    }
 
     public function hookDisplayFooter($param)
     {
@@ -417,6 +432,43 @@ class Ps_LegalCompliance extends Module
         $this->context->smarty->assign('cms_links', $cms_links);
 
         return $this->display(__FILE__, 'hookDisplayFooter.tpl');
+    }
+    
+    public function hookDisplayFooterAfter($param)
+    {
+        if (isset($this->context->controller->php_self)) {
+            if (in_array($this->context->controller->php_self, array('index', 'category', 'prices-drop', 'new-products', 'best-sales', 'search'))) {
+                $cms_repository = $this->entity_manager->getRepository('CMS');
+                $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+                $cms_page_shipping_pay = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
+                
+                $link_shipping = false;
+                if ((int)$cms_page_shipping_pay->id_cms > 0) {
+                    $cms_shipping_pay = $cms_repository->i10nFindOneById((int)$cms_page_shipping_pay->id_cms,
+                        (int)$this->context->language->id,
+                        (int)$this->context->shop->id);
+                    $link_shipping =
+                        $this->context->link->getCMSLink($cms_shipping_pay, $cms_shipping_pay->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+                }                           
+                
+                $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                $customer_default_group = new Group($customer_default_group_id);
+                
+                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                        $tax_included = true;
+                } else {
+                    $tax_included = false;
+                }
+                
+                $this->context->smarty->assign('show_shipping', (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true);
+                $this->context->smarty->assign('link_shipping', $link_shipping);
+                $this->context->smarty->assign('tax_included', $tax_included);
+                
+                return $this->display(__FILE__, 'hookDisplayFooterAfter.tpl');
+                
+            }
+        }
     }
 
     /* This hook is present to maintain backward compatibility */
@@ -544,7 +596,61 @@ class Ps_LegalCompliance extends Module
             }
         }
     }
-
+    
+    public function hookTermsAndConditions($param)
+    {
+        $returned_terms_and_conditions = array();
+        
+        $cms_repository = $this->entity_manager->getRepository('CMS');
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
+        $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
+        
+        if ((int)$cms_page_conditions_associated->id_cms > 0 && (int)$cms_page_revocation_associated->id_cms > 0) {
+            $cms_conditions = $cms_repository->i10nFindOneById((int)$cms_page_conditions_associated->id_cms, 
+                                                               (int)$this->context->language->id,
+                                                               (int)$this->context->shop->id);
+            $link_conditions =
+                $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+            
+            $cms_revocation = $cms_repository->i10nFindOneById((int)$cms_page_revocation_associated->id_cms, 
+                                                               (int)$this->context->language->id,
+                                                               (int)$this->context->shop->id);
+            $link_revocation =
+                $this->context->link->getCMSLink($cms_revocation, $cms_revocation->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));    
+            
+            $termsAndConditions = new TermsAndConditions();
+            $termsAndConditions
+                ->setText(
+                    $this->l('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionnaly.', [], 'Checkout'),
+                    $link_conditions,
+                    $link_revocation
+                )
+                ->setIdentifier('terms-and-conditions')
+            ;        
+            $returned_terms_and_conditions[] = $termsAndConditions;
+        }
+                        
+        if ((bool)Configuration::get('AEUC_LABEL_REVOCATION_VP') && $this->hasCartVirtualProduct($this->context->cart)) {
+            $termsAndConditions = new TermsAndConditions();
+        
+            $termsAndConditions
+                ->setText(
+                    $this->l('I agree to the starting of the contract and aknowledge that I lose my right to cancel once the download has begun or the service has been fully performed.', [], 'Checkout')
+                )
+                ->setIdentifier('virtual-products')
+            ;
+        
+            $returned_terms_and_conditions[] = $termsAndConditions;
+        }
+        
+        if (sizeof($returned_terms_and_conditions) > 0) {
+            return $returned_terms_and_conditions;
+        } else {        
+            return false;
+        }
+    }
+    
     public function hookDisplayCMSPrintButton($param)
     {
         if ($this->isPrintableCMSPage()) {
@@ -694,10 +800,10 @@ class Ps_LegalCompliance extends Module
                         $smartyVars['unit_price']['unity'] = $product->unity;
                     }
                 }
-                return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
+                return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type, $product->id);
             }
         }
-
+ 
     }
 
     private function emptyTemplatesCache()
@@ -706,9 +812,9 @@ class Ps_LegalCompliance extends Module
         $this->_clearCache('product-list.tpl');
     }
 
-    private function dumpHookDisplayProductPriceBlock(array $smartyVars, $hook_type)
+    private function dumpHookDisplayProductPriceBlock(array $smartyVars, $hook_type, $additional_cache_param = false)
     {
-        $cache_id = sha1($hook_type);
+        $cache_id = sha1($hook_type . $additional_cache_param);
         $this->context->smarty->assign(array('smartyVars' => $smartyVars));
         $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_tnc.js', true);
         $template = 'hookDisplayProductPriceBlock_'.$hook_type.'.tpl';
@@ -930,7 +1036,7 @@ class Ps_LegalCompliance extends Module
     {
         Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', $is_option_active);
     }
-
+    
     protected function processPsAtcpShipWrap($is_option_active)
     {
         Configuration::updateValue('PS_ATCP_SHIPWRAP', $is_option_active);
