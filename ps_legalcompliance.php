@@ -1029,10 +1029,10 @@ class Ps_LegalCompliance extends Module
                                                              'hint'  => $this->l('Indicate the delivery time for your out-of-stock products.', 'ps_legalcompliance'),
                                                        ),
                                                        array('type'    => 'switch',
-                                                             'label'   => $this->l('Initial price label', 'ps_legalcompliance'),
+                                                             'label'   => $this->l('\'Before\' initial price label', 'ps_legalcompliance'),
                                                              'name'    => 'AEUC_LABEL_SPECIFIC_PRICE',
                                                              'is_bool' => true,
-                                                             'desc'    => $this->l('When a product is on sale, displays its original price, crossed out, next to the price on the product page.', 'ps_legalcompliance'),
+                                                             'desc'    => $this->l('When a product is on sale, displays a \'Before\' label with the original price crossed out, next to the price on the product page.', 'ps_legalcompliance'),
                                                              'values'  => array(array('id'    => 'active_on',
                                                                                       'value' => true,
                                                                                       'label' => $this->l('Enabled', 'ps_legalcompliance')
