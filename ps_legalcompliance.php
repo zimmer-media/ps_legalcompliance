@@ -220,7 +220,8 @@ class Ps_LegalCompliance extends Module
                Configuration::updateValue('AEUC_LABEL_REVOCATION_TOS', false) &&
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
-               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true);
+               Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
+               Configuration::updateValue('PS_FINAL_SUMMARY_ENABLED', true);
     }
 
     public function generateAndLinkCMSPages()
