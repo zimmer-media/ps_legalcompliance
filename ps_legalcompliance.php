@@ -797,7 +797,7 @@ class Ps_LegalCompliance extends Module
                         } else {
                             $productPrice = $product->getPrice(false, null, 6);
                         }
-                        $smartyVars['unit_price']['unit_price'] = ($product->unit_price_ratio > 0) ? ($productPrice / $product->unit_price_ratio) : 0;
+                        $smartyVars['unit_price']['unit_price'] = $param['product']['unit_price_full'];
                         $smartyVars['unit_price']['unity'] = $product->unity;
                     }
                 }
