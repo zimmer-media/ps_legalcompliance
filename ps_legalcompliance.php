@@ -108,7 +108,8 @@ class Ps_LegalCompliance extends Module
                   $this->registerhook('displayOverrideTemplate') &&
                   $this->registerhook('displayCheckoutSummaryTop') &&
                   $this->createConfig() &&
-                  $this->generateAndLinkCMSPages();
+                  $this->generateAndLinkCMSPages() &&
+                  $this->removeCMSPagesIfNeeded();
 
         $this->emptyTemplatesCache();
 
@@ -267,6 +268,37 @@ class Ps_LegalCompliance extends Module
                 $cms->add();
                 $cms_role->id_cms = (int)$cms->id;
                 $cms_role->update();
+            }
+        }
+        return true;
+    }
+    
+    public function removeCMSPagesIfNeeded()
+    {
+        if (Module::isInstalled('ps_linklist')) {
+            $cms_repository = $this->entity_manager->getRepository('CMS');
+            $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+            $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);    
+            
+            $sql = 'SELECT id_link_block, content
+    				FROM '._DB_PREFIX_.'link_block';
+            $link_blocks = Db::getInstance()->executeS($sql);
+            foreach ($link_blocks as $link_block) {
+                $conditions_found = false;
+                $content = json_decode($link_block['content'], true);
+                if (isset($content['cms']) && is_array($content['cms'])) {
+                    foreach ($content['cms'] as $cms_key => $cms_id) {
+                        if ((int)$cms_id == (int)$cms_page_conditions_associated->id_cms) {
+                            unset($content['cms'][$cms_key]);
+                            $conditions_found = true;
+                        }
+                    }
+                }
+                if ($conditions_found) {
+                    $content['cms'] = array_values($content['cms']);
+                    $content = json_encode($content);
+                    Db::getInstance()->update('link_block', array('content' => $content), '`id_link_block` = ' . (int)$link_block['id_link_block']);
+                }
             }
         }
         return true;
