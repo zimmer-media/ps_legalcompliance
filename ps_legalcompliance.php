@@ -109,7 +109,8 @@ class Ps_LegalCompliance extends Module
                   $this->registerhook('displayCheckoutSummaryTop') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages() &&
-                  $this->removeCMSPagesIfNeeded();
+                  $this->removeCMSPagesIfNeeded() &&
+                  $this->setLegalContentToOrderMails();
 
         $this->emptyTemplatesCache();
 
@@ -299,6 +300,54 @@ class Ps_LegalCompliance extends Module
                     $content = json_encode($content);
                     Db::getInstance()->update('link_block', array('content' => $content), '`id_link_block` = ' . (int)$link_block['id_link_block']);
                 }
+            }
+        }
+        return true;
+    }
+    
+    public function setLegalContentToOrderMails()
+    {
+        $cms_roles_aeuc = $this->getCMSRoles();
+        $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+        $cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
+        $role_ids_to_set = array();
+        $email_ids_to_set = array();
+        
+        $legal_options = array();
+        $cleaned_mails_names = array();
+        
+        foreach ($cms_roles_associated as $role) {
+            if ($role->name == self::LEGAL_CONDITIONS || $role->name == self::LEGAL_REVOCATION || $role->name == self::LEGAL_NOTICE) {
+                $role_ids_to_set[] = $role->id;
+            }
+        }
+        
+        $email_filenames = array(
+            'backoffice_order',
+            'credit_slip',
+            'order_canceled',
+            'order_changed',
+            'order_conf',
+            'order_customer_comment',
+            'order_merchant_comment',
+            'order_return_state',
+            'payment',            
+            'refund',
+        );
+        foreach (AeucEmailEntity::getAll() as $email) {
+            if (in_array($email['filename'], $email_filenames)) {
+                $email_ids_to_set[] = $email['id_mail'];
+            }
+        }
+        
+        AeucCMSRoleEmailEntity::truncate();
+        
+        foreach ($role_ids_to_set as $role_id) {
+            foreach ($email_ids_to_set as $email_id) {
+                $assoc_obj = new AeucCMSRoleEmailEntity();
+                $assoc_obj->id_mail = (int)$email_id;
+                $assoc_obj->id_cms_role = (int)$role_id;        
+                $assoc_obj->save();
             }
         }
         return true;
