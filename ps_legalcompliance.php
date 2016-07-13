@@ -216,6 +216,7 @@ class Ps_LegalCompliance extends Module
 
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
+               Configuration::updateValue('AEUC_LABEL_DELIVERY_ADDITIONAL', false) &&
                Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
                Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
                Configuration::updateValue('AEUC_LABEL_TAX_INC_EXC', true) &&
@@ -406,6 +407,7 @@ class Ps_LegalCompliance extends Module
     {
         return Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_AVAILABLE') &&
                Configuration::deleteByName('AEUC_LABEL_DELIVERY_TIME_OOS') &&
+               Configuration::deleteByName('AEUC_LABEL_DELIVERY_ADDITIONAL') &&
                Configuration::deleteByName('AEUC_LABEL_SPECIFIC_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_UNIT_PRICE') &&
                Configuration::deleteByName('AEUC_LABEL_TAX_INC_EXC') &&
@@ -519,7 +521,7 @@ class Ps_LegalCompliance extends Module
     public function hookDisplayFooterAfter($param)
     {
         if (isset($this->context->controller->php_self)) {
-            if (in_array($this->context->controller->php_self, array('index', 'category', 'prices-drop', 'new-products', 'best-sales', 'search'))) {
+            if (in_array($this->context->controller->php_self, array('index', 'category', 'prices-drop', 'new-products', 'best-sales', 'search', 'product'))) {
                 $cms_repository = $this->entity_manager->getRepository('CMS');
                 $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
                 $cms_page_shipping_pay = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
@@ -531,25 +533,34 @@ class Ps_LegalCompliance extends Module
                         (int)$this->context->shop->id);
                     $link_shipping =
                         $this->context->link->getCMSLink($cms_shipping_pay, $cms_shipping_pay->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
-                }                           
-                
-                $customer_default_group_id = (int)$this->context->customer->id_default_group;
-                $customer_default_group = new Group($customer_default_group_id);
-                
-                if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
-                    !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
-                        $tax_included = true;
-                } else {
-                    $tax_included = false;
                 }
                 
-                $this->context->smarty->assign('show_shipping', (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true);
-                $this->context->smarty->assign('link_shipping', $link_shipping);
-                $this->context->smarty->assign('tax_included', $tax_included);
+                if ($this->context->controller->php_self == 'product') {
+                    $delivery_addtional_info = Configuration::get('AEUC_LABEL_DELIVERY_ADDITIONAL', (int)$this->context->language->id);
+                    if (trim($delivery_addtional_info) == '') {
+                        return false;
+                    }                    
+                    $this->context->smarty->assign('link_shipping', $link_shipping);
+                    $this->context->smarty->assign('delivery_additional_information', $delivery_addtional_info);
+                } else {                    
+                    $customer_default_group_id = (int)$this->context->customer->id_default_group;
+                    $customer_default_group = new Group($customer_default_group_id);
+                    
+                    if ((bool)Configuration::get('PS_TAX') === true && $this->context->country->display_tax_label &&
+                        !(Validate::isLoadedObject($customer_default_group) && (bool)$customer_default_group->price_display_method === true)) {
+                            $tax_included = true;
+                    } else {
+                        $tax_included = false;
+                    }
+                    
+                    $this->context->smarty->assign('show_shipping', (bool)Configuration::get('AEUC_LABEL_SHIPPING_INC_EXC') === true);
+                    $this->context->smarty->assign('link_shipping', $link_shipping);
+                    $this->context->smarty->assign('tax_included', $tax_included);
+                }
                 
                 return $this->display(__FILE__, 'hookDisplayFooterAfter.tpl');
                 
-            }
+            } 
         }
     }
 
@@ -844,6 +855,10 @@ class Ps_LegalCompliance extends Module
                 $contextualized_content = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', (int)$context_id_lang);
                 $smartyVars['after_price']['delivery_str_i18n'] = $contextualized_content;
             }
+            $delivery_addtional_info = Configuration::get('AEUC_LABEL_DELIVERY_ADDITIONAL', (int)$context_id_lang);
+            if (trim($delivery_addtional_info) != '') {
+                $smartyVars['after_price']['delivery_str_i18n'].= '*';
+            }
 
             return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type);
         }
@@ -982,6 +997,12 @@ class Ps_LegalCompliance extends Module
                 $id_lang = (int)$exploded[$count - 1];
                 $i10n_inputs_received['AEUC_LABEL_DELIVERY_TIME_OOS'][$id_lang] = $received_values[$key_received];
             }
+            if (strripos($key_received, 'AEUC_LABEL_DELIVERY_ADDITIONAL') !== false) {
+                $exploded = explode('_', $key_received);
+                $count = count($exploded);
+                $id_lang = (int)$exploded[$count - 1];
+                $i10n_inputs_received['AEUC_LABEL_DELIVERY_ADDITIONAL'][$id_lang] = $received_values[$key_received];
+            }
         }
 
         if (count($i10n_inputs_received) > 0) {
@@ -1008,6 +1029,9 @@ class Ps_LegalCompliance extends Module
         }
         if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_TIME_OOS'])) {
             Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $i10n_inputs['AEUC_LABEL_DELIVERY_TIME_OOS']);
+        }
+        if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_ADDITIONAL'])) {
+            Configuration::updateValue('AEUC_LABEL_DELIVERY_ADDITIONAL', $i10n_inputs['AEUC_LABEL_DELIVERY_ADDITIONAL']);
         }
     }
 
@@ -1216,6 +1240,14 @@ class Ps_LegalCompliance extends Module
                                                              'desc'  => $this->l('It is displayed on the product page and in the footer of other pages. Leave the field empty to disable.', 'ps_legalcompliance'),
                                                              'hint'  => $this->l('Indicate the delivery time for your out-of-stock products.', 'ps_legalcompliance'),
                                                        ),
+                                                       array('type'  => 'text',
+                                                             'lang'  => true,
+                                                             'label' => $this->l('Additional information about delivery time',
+                                                                                 'ps_legalcompliance'),
+                                                             'name'  => 'AEUC_LABEL_DELIVERY_ADDITIONAL',
+                                                             'desc'  => $this->l('If you specified a delivery time, this additional information is displayed in the footer of product pages with a link to the "Shipping & Payment" Page. Leave the field empty to disable.', 'ps_legalcompliance'),
+                                                             'hint'  => $this->l('Indicate for which countries your delivery time applies.', 'ps_legalcompliance'),
+                                                       ),
                                                        array('type'    => 'switch',
                                                              'label'   => $this->l('\'Before\' initial price label', 'ps_legalcompliance'),
                                                              'name'    => 'AEUC_LABEL_SPECIFIC_PRICE',
@@ -1365,11 +1397,13 @@ class Ps_LegalCompliance extends Module
             $tmp_id_lang = (int)$lang['id_lang'];
             $delivery_time_available_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $tmp_id_lang);
             $delivery_time_oos_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', $tmp_id_lang);
+            $delivery_additional[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_ADDITIONAL', $tmp_id_lang);
         }
 
         return array(
             'AEUC_LABEL_DELIVERY_TIME_AVAILABLE' => $delivery_time_available_values,
             'AEUC_LABEL_DELIVERY_TIME_OOS'       => $delivery_time_oos_values,
+            'AEUC_LABEL_DELIVERY_ADDITIONAL'     => $delivery_additional,
             'AEUC_LABEL_SPECIFIC_PRICE'          => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
             'AEUC_LABEL_UNIT_PRICE'              => Configuration::get('AEUC_LABEL_UNIT_PRICE'),
             'AEUC_LABEL_TAX_INC_EXC'             => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),
