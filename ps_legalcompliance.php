@@ -702,6 +702,9 @@ class Ps_LegalCompliance extends Module
                 $this->context->controller->addCSS($this->_path.'views/css/aeuc_print.css', 'print');
             }
         }
+        if (Tools::getValue('direct_print') == '1') {
+            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_print.js');
+        }
     }
 
     protected function isPrintableCMSPage()
@@ -817,6 +820,22 @@ class Ps_LegalCompliance extends Module
     public function hookDisplayCMSPrintButton($param)
     {
         if ($this->isPrintableCMSPage()) {
+            $this->context->smarty->assign('directPrint', Tools::getValue('content_only') != '1');
+
+            $cms_repository = $this->entity_manager->getRepository('CMS');
+            $cms_current = $cms_repository->i10nFindOneById((int)Tools::getValue('id_cms'),
+                                                            (int)$this->context->language->id,
+                                                            (int)$this->context->shop->id);
+            $cms_current_link =
+            $this->context->link->getCMSLink($cms_current, $cms_current->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+
+            if (!strpos($cms_current_link, '?')) {
+                $cms_current_link .= '?direct_print=1';
+            } else {
+                $cms_current_link .= '&direct_print=1';
+            }
+
+            $this->context->smarty->assign('print_link', $cms_current_link);
             return $this->display(__FILE__, 'hookDisplayCMSPrintButton.tpl');
         }
     }
