@@ -869,12 +869,6 @@ class Ps_LegalCompliance extends Module
                         $is_ssl_enabled = (bool) Configuration::get('PS_SSL_ENABLED');
                         $link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
 
-                        if (!strpos($link_ship_pay, '?')) {
-                            $link_ship_pay .= '?content_only=1';
-                        } else {
-                            $link_ship_pay .= '&content_only=1';
-                        }
-
                         $smartyVars['ship'] = array();
                         $smartyVars['ship']['link_ship_pay'] = $link_ship_pay;
                         $smartyVars['ship']['ship_str_i18n'] = $this->l('Shipping excluded', 'ps_legalcompliance');
