@@ -71,12 +71,16 @@ a.payment_module_adv {
     border: 1px solid #d6d4d4;
     border-radius: 4px;
 }
-#order-items div.aeuc_unit_price_label,
 .cart-overview div.aeuc_unit_price_label,
 #checkout-cart-summary div.aeuc_unit_price_label {
 	font-size: 8px;
 	display: inline-block;
 	font-weight: normal;
+}
+#order-items div.aeuc_unit_price_label {
+	display: block;
+	font-size: 0.875rem;
+	color: #878787;
 }
 .products div.aeuc_unit_price_label {
 	font-size: 9px;
