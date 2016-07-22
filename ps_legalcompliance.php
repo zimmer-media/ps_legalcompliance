@@ -887,7 +887,7 @@ class Ps_LegalCompliance extends Module
         }
 
         /* Handle Specific Price label*/
-        if ($param['type'] == 'old_price' && (bool) Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true) {
+        if ($param['type'] == 'old_price' && (bool) Configuration::get('AEUC_LABEL_SPECIFIC_PRICE') === true && 'catalog/_partials/miniatures/product.tpl' != $param['smarty']->template_resource) {
             $smartyVars['old_price'] = array();
             $smartyVars['old_price']['before_str_i18n'] = $this->l('Our previous price', 'ps_legalcompliance');
 
