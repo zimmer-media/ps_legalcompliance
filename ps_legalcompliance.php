@@ -310,14 +310,18 @@ class Ps_LegalCompliance extends Module
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_roles_associated = $cms_role_repository->getCMSRolesAssociated();
         $role_ids_to_set = array();
+        $role_id_legal_notice = false;
         $email_ids_to_set = array();
-
+        $account_email_ids_to_set = array();
         $legal_options = array();
         $cleaned_mails_names = array();
 
         foreach ($cms_roles_associated as $role) {
             if ($role->name == self::LEGAL_CONDITIONS || $role->name == self::LEGAL_REVOCATION || $role->name == self::LEGAL_NOTICE) {
                 $role_ids_to_set[] = $role->id;
+            }
+            if ($role->name == self::LEGAL_NOTICE) {
+                $role_id_legal_notice = $role->id;
             }
         }
 
@@ -339,6 +343,18 @@ class Ps_LegalCompliance extends Module
             }
         }
 
+        $account_newsletter_mail_filenames = array(
+            'account',
+            'newsletter',
+            'password',
+            'password_query',
+        );
+        foreach (AeucEmailEntity::getAll() as $email) {
+            if (in_array($email['filename'], $account_newsletter_mail_filenames)) {
+                $account_email_ids_to_set[] = $email['id_mail'];
+            }
+        }
+
         AeucCMSRoleEmailEntity::truncate();
 
         foreach ($role_ids_to_set as $role_id) {
@@ -350,6 +366,14 @@ class Ps_LegalCompliance extends Module
             }
         }
 
+        if ($role_id_legal_notice) {
+            foreach ($account_email_ids_to_set as $email_id) {
+                $assoc_obj = new AeucCMSRoleEmailEntity();
+                $assoc_obj->id_mail = (int)$email_id;
+                $assoc_obj->id_cms_role = (int)$role_id_legal_notice;
+                $assoc_obj->save();
+            }
+        }
         return true;
     }
 
@@ -678,6 +702,9 @@ class Ps_LegalCompliance extends Module
                 $this->context->controller->addCSS($this->_path.'views/css/aeuc_print.css', 'print');
             }
         }
+        if (Tools::getValue('direct_print') == '1') {
+            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_print.js');
+        }
     }
 
     protected function isPrintableCMSPage()
@@ -793,6 +820,22 @@ class Ps_LegalCompliance extends Module
     public function hookDisplayCMSPrintButton($param)
     {
         if ($this->isPrintableCMSPage()) {
+            $this->context->smarty->assign('directPrint', Tools::getValue('content_only') != '1');
+
+            $cms_repository = $this->entity_manager->getRepository('CMS');
+            $cms_current = $cms_repository->i10nFindOneById((int)Tools::getValue('id_cms'),
+                                                            (int)$this->context->language->id,
+                                                            (int)$this->context->shop->id);
+            $cms_current_link =
+            $this->context->link->getCMSLink($cms_current, $cms_current->link_rewrite, (bool)Configuration::get('PS_SSL_ENABLED'));
+
+            if (!strpos($cms_current_link, '?')) {
+                $cms_current_link .= '?direct_print=1';
+            } else {
+                $cms_current_link .= '&direct_print=1';
+            }
+
+            $this->context->smarty->assign('print_link', $cms_current_link);
             return $this->display(__FILE__, 'hookDisplayCMSPrintButton.tpl');
         }
     }
@@ -868,12 +911,6 @@ class Ps_LegalCompliance extends Module
                                                                             $this->context->shop->id);
                         $is_ssl_enabled = (bool) Configuration::get('PS_SSL_ENABLED');
                         $link_ship_pay = $this->context->link->getCMSLink($cms_revocations, $cms_revocations->link_rewrite, $is_ssl_enabled);
-
-                        if (!strpos($link_ship_pay, '?')) {
-                            $link_ship_pay .= '?content_only=1';
-                        } else {
-                            $link_ship_pay .= '&content_only=1';
-                        }
 
                         $smartyVars['ship'] = array();
                         $smartyVars['ship']['link_ship_pay'] = $link_ship_pay;

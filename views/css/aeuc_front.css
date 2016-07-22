@@ -71,21 +71,27 @@ a.payment_module_adv {
     border: 1px solid #d6d4d4;
     border-radius: 4px;
 }
-#order-items div.aeuc_unit_price_label,
-.cart-overview div.aeuc_unit_price_label,
-#checkout-cart-summary div.aeuc_unit_price_label {
+.cart-overview div.aeuc_unit_price_label {
 	font-size: 8px;
 	display: inline-block;
 	font-weight: normal;
 }
-.products div.aeuc_unit_price_label {
-	font-size: 9px;
-	display: block;
-	font-weight: normal;
-	text-align: center;
-}
 #checkout-cart-summary div.aeuc_unit_price_label {
-	float: right;
+	display: block;
+	font-size: 0.75rem;
+	color: #878787;
+}
+#order-items div.aeuc_unit_price_label {
+	display: block;
+	font-size: 0.875rem;
+	color: #878787;
+}
+.products div.aeuc_unit_price_label {
+	display: block;
+	font-size: 0.875rem;
+	color: #acaaa6;
+	font-weight: 700;
+	text-align: center;
 }
 #blockcart-modal div.aeuc_unit_price_label {
 	font-size: 9px;
@@ -120,7 +126,7 @@ div.condition-label label.js-terms {
 
 div.aeuc_footer_info {
 	text-align: center;
-	font-size: 10px;
+	font-size: 0.875rem;
 	margin-top: 10px;
 	margin-bottom: 10px;
 }
