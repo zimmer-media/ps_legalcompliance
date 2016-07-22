@@ -105,6 +105,7 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('termsAndConditions') &&
                   $this->registerhook('displayOverrideTemplate') &&
                   $this->registerhook('displayCheckoutSummaryTop') &&
+                  $this->registerhook('sendMailAlterTemplateVars') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages() &&
                   $this->removeCMSPagesIfNeeded() &&
@@ -645,6 +646,27 @@ class Ps_LegalCompliance extends Module
 
         $this->context->smarty->assign(array('cms_contents' => $cms_contents));
         $param['template_html'] .= $this->display(__FILE__, 'hook-email-wrapper.tpl');
+    }
+
+    public function hookSendMailAlterTemplateVars($param)
+    {
+        if (!isset($param['template']) && !isset($param['{carrier}'])) {
+            return;
+        }
+
+        $tpl_name = (string) $param['template'];
+        $tpl_name_exploded = explode('.', $tpl_name);
+        if (is_array($tpl_name_exploded)) {
+            $tpl_name = (string) $tpl_name_exploded[0];
+        }
+
+        if ('order_conf' !== $tpl_name) {
+            return;
+        }
+
+        $carrier = new Carrier((int) $param['cart']->id_carrier);
+
+        $param['template_vars']['{carrier}'] .= ' - '.$carrier->delay[(int) $param['cart']->id_lang];
     }
 
     public function hookHeader($param)
