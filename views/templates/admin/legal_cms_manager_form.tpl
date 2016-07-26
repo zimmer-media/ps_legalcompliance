@@ -34,7 +34,7 @@
             {l s='Your country\'s legislation may require you to communicate some specific legal information to your customers.' mod='advancedeucompliance'}
         </p>
         <p>
-            {l s='The Legal Compliance module gives you the mean to display this information to your customer, using static pages  (some created on purpose by the module). It is your responsibility to fill in the corresponding pages with the required content.'}
+            {l s='The Legal Compliance module provides the means to indicate legally required informations to your customer, using static pages (some created on purpose by the module). It is your responsibility to fill in the corresponding pages with the required content.'}
         </p>
         <p>
             {l s='For each of the topics below, first indicate which of your Pages contains the required information:' mod='advancedeucompliance'}
