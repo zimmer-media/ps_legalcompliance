@@ -868,7 +868,7 @@ class Ps_LegalCompliance extends Module
                 $combinations = $product->getAttributeCombinations($this->context->language->id);
                 if ($combinations && is_array($combinations)) {
                     foreach ($combinations as $combination) {
-                        if ((float) $combination['price'] > 0) {
+                        if ((float) $combination['price'] != 0) {
                             $need_display = true;
                             break;
                         }
