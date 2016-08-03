@@ -202,7 +202,7 @@ class Ps_LegalCompliance extends Module
         foreach ($langs as $lang) {
             $delivery_time_available_values[(int) $lang->id] = $this->l('Delivery: 1 to 3 weeks', 'ps_legalcompliance');
             $delivery_time_oos_values[(int) $lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');
-            $custom_cart_text_values[(int) $lang->id] = $this->l('The order will only be confirmed when you click on the button \'Order with an oblication to pay\' at the end of the checkout!', 'ps_legalcompliance');
+            $custom_cart_text_values[(int) $lang->id] = $this->l('The order will only be confirmed when you click on the button \'Order with an obligation to pay\' at the end of the checkout!', 'ps_legalcompliance');
         }
 
         /* Base settings */
