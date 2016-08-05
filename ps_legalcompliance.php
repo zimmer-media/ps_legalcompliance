@@ -766,7 +766,7 @@ class Ps_LegalCompliance extends Module
             $termsAndConditions = new TermsAndConditions();
             $termsAndConditions
             ->setText(
-                $this->l('I agree to the [terms of service], the [revocation terms], the [privacy policy] and will adhere to them unconditionnaly.', [], 'Checkout'),
+                $this->l('I agree to the [terms of service], the [revocation terms], the [privacy policy] and will adhere to them unconditionally.', [], 'Checkout'),
                 $link_conditions,
                 $link_revocation,
                 $link_privacy
@@ -790,7 +790,7 @@ class Ps_LegalCompliance extends Module
             $termsAndConditions = new TermsAndConditions();
             $termsAndConditions
                 ->setText(
-                    $this->l('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionnaly.', [], 'Checkout'),
+                    $this->l('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionally.', [], 'Checkout'),
                     $link_conditions,
                     $link_revocation
                 )
@@ -804,7 +804,7 @@ class Ps_LegalCompliance extends Module
 
             $termsAndConditions
                 ->setText(
-                    $this->l('I agree to the starting of the contract and aknowledge that I lose my right to cancel once the download has begun or the service has been fully performed.', [], 'Checkout')
+                    $this->l('I agree to the starting of the contract and acknowledge that I lose my right to cancel once the download has begun or the service has been fully performed.', [], 'Checkout')
                 )
                 ->setIdentifier('virtual-products')
             ;
