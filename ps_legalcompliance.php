@@ -78,7 +78,7 @@ class Ps_LegalCompliance extends Module
         $this->displayName = $this->l('Legal Compliance');
         $this->description = $this->l('This module helps merchants comply with applicable e-commerce laws.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
-        
+
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 
         /* Init errors var */
@@ -518,7 +518,7 @@ class Ps_LegalCompliance extends Module
 
         return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
     }
-    
+
     public function hookDisplayReassurance($param)
     {
         if (isset($this->context->controller->php_self) && (in_array($this->context->controller->php_self, array('order', 'cart')))) {
@@ -761,39 +761,8 @@ class Ps_LegalCompliance extends Module
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
         $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
         $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
-        $cms_page_privacy_associated = $cms_role_repository->findOneByName(self::LEGAL_PRIVACY);
 
-        if ((int) $cms_page_conditions_associated->id_cms > 0 && (int) $cms_page_revocation_associated->id_cms > 0 && (int) $cms_page_privacy_associated->id_cms > 0) {
-            $cms_conditions = $cms_repository->i10nFindOneById((int) $cms_page_conditions_associated->id_cms,
-                (int) $this->context->language->id,
-                (int) $this->context->shop->id);
-            $link_conditions =
-            $this->context->link->getCMSLink($cms_conditions, $cms_conditions->link_rewrite, (bool) Configuration::get('PS_SSL_ENABLED'));
-
-            $cms_revocation = $cms_repository->i10nFindOneById((int) $cms_page_revocation_associated->id_cms,
-                (int) $this->context->language->id,
-                (int) $this->context->shop->id);
-            $link_revocation =
-            $this->context->link->getCMSLink($cms_revocation, $cms_revocation->link_rewrite, (bool) Configuration::get('PS_SSL_ENABLED'));
-
-            $cms_privacy = $cms_repository->i10nFindOneById((int) $cms_page_privacy_associated->id_cms,
-                (int) $this->context->language->id,
-                (int) $this->context->shop->id);
-            $link_privacy =
-            $this->context->link->getCMSLink($cms_privacy, $cms_privacy->link_rewrite, (bool) Configuration::get('PS_SSL_ENABLED'));
-
-            $termsAndConditions = new TermsAndConditions();
-            $termsAndConditions
-            ->setText(
-                $this->l('I agree to the [terms of service], the [revocation terms], the [privacy policy] and will adhere to them unconditionally.', [], 'Checkout'),
-                $link_conditions,
-                $link_revocation,
-                $link_privacy
-                )
-                ->setIdentifier('terms-and-conditions')
-                ;
-            $returned_terms_and_conditions[] = $termsAndConditions;
-        } elseif ((int) $cms_page_conditions_associated->id_cms > 0 && (int) $cms_page_revocation_associated->id_cms > 0) {
+        if ((int) $cms_page_conditions_associated->id_cms > 0 && (int) $cms_page_revocation_associated->id_cms > 0) {
             $cms_conditions = $cms_repository->i10nFindOneById((int) $cms_page_conditions_associated->id_cms,
                                                                (int) $this->context->language->id,
                                                                (int) $this->context->shop->id);
