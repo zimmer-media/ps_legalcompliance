@@ -105,9 +105,10 @@ class Ps_LegalCompliance extends Module
                   $this->registerHook('displayCMSPrintButton') &&
                   $this->registerHook('displayCMSDisputeInformation') &&
                   $this->registerHook('termsAndConditions') &&
-                  $this->registerhook('displayOverrideTemplate') &&
-                  $this->registerhook('displayCheckoutSummaryTop') &&
-                  $this->registerhook('sendMailAlterTemplateVars') &&
+                  $this->registerHook('displayOverrideTemplate') &&
+                  $this->registerHook('displayCheckoutSummaryTop') &&
+                  $this->registerHook('sendMailAlterTemplateVars') &&
+                  $this->registerHook('displayReassurance') &&
                   $this->createConfig() &&
                   $this->generateAndLinkCMSPages() &&
                   $this->removeCMSPagesIfNeeded() &&
@@ -193,6 +194,7 @@ class Ps_LegalCompliance extends Module
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
+        $custom_cart_text_values = array();
 
         $langs_repository = $this->entity_manager->getRepository('Language');
         $langs = $langs_repository->findAll();
@@ -200,6 +202,7 @@ class Ps_LegalCompliance extends Module
         foreach ($langs as $lang) {
             $delivery_time_available_values[(int) $lang->id] = $this->l('Delivery: 1 to 3 weeks', 'ps_legalcompliance');
             $delivery_time_oos_values[(int) $lang->id] = $this->l('Delivery: 3 to 6 weeks', 'ps_legalcompliance');
+            $custom_cart_text_values[(int) $lang->id] = $this->l('The order will only be confirmed when you click on the button \'Order with an obligation to pay\' at the end of the checkout!', 'ps_legalcompliance');
         }
 
         /* Base settings */
@@ -214,6 +217,7 @@ class Ps_LegalCompliance extends Module
 
         return Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $delivery_time_available_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_OOS', $delivery_time_oos_values) &&
+               Configuration::updateValue('AEUC_LABEL_CUSTOM_CART_TEXT', $custom_cart_text_values) &&
                Configuration::updateValue('AEUC_LABEL_DELIVERY_ADDITIONAL', false) &&
                Configuration::updateValue('AEUC_LABEL_SPECIFIC_PRICE', false) &&
                Configuration::updateValue('AEUC_LABEL_UNIT_PRICE', true) &&
@@ -222,6 +226,7 @@ class Ps_LegalCompliance extends Module
                Configuration::updateValue('AEUC_LABEL_REVOCATION_VP', true) &&
                Configuration::updateValue('AEUC_LABEL_SHIPPING_INC_EXC', false) &&
                Configuration::updateValue('AEUC_LABEL_COMBINATION_FROM', true) &&
+               Configuration::updateValue('PS_TAX_DISPLAY', true) &&
                Configuration::updateValue('PS_FINAL_SUMMARY_ENABLED', true);
     }
 
@@ -439,6 +444,7 @@ class Ps_LegalCompliance extends Module
                Configuration::deleteByName('AEUC_LABEL_REVOCATION_VP') &&
                Configuration::deleteByName('AEUC_LABEL_SHIPPING_INC_EXC') &&
                Configuration::deleteByName('AEUC_LABEL_COMBINATION_FROM') &&
+               Configuration::deleteByName('AEUC_LABEL_CUSTOM_CART_TEXT') &&
                Configuration::updateValue('PS_ATCP_SHIPWRAP', false);
     }
 
@@ -511,6 +517,19 @@ class Ps_LegalCompliance extends Module
         $this->context->smarty->assign('link_shopping_cart', $cart_url);
 
         return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
+    }
+    
+    public function hookDisplayReassurance($param)
+    {
+        if (isset($this->context->controller->php_self) && (in_array($this->context->controller->php_self, array('order', 'cart')))) {
+            $custom_cart_text = Configuration::get('AEUC_LABEL_CUSTOM_CART_TEXT', (int) $this->context->language->id);
+            if (trim($custom_cart_text) == '') {
+                return false;
+            } else {
+                $this->context->smarty->assign('custom_cart_text', $custom_cart_text);
+                return $this->display(__FILE__, 'hookDisplayReassurance.tpl');
+            }
+        }
     }
 
     public function hookDisplayFooter($param)
@@ -1079,6 +1098,12 @@ class Ps_LegalCompliance extends Module
                 $id_lang = (int) $exploded[$count - 1];
                 $i10n_inputs_received['AEUC_LABEL_DELIVERY_TIME_OOS'][$id_lang] = $received_values[$key_received];
             }
+            if (strripos($key_received, 'AEUC_LABEL_CUSTOM_CART_TEXT') !== false) {
+                $exploded = explode('_', $key_received);
+                $count = count($exploded);
+                $id_lang = (int) $exploded[$count - 1];
+                $i10n_inputs_received['AEUC_LABEL_CUSTOM_CART_TEXT'][$id_lang] = $received_values[$key_received];
+            }
             if (strripos($key_received, 'AEUC_LABEL_DELIVERY_ADDITIONAL') !== false) {
                 $exploded = explode('_', $key_received);
                 $count = count($exploded);
@@ -1088,7 +1113,7 @@ class Ps_LegalCompliance extends Module
         }
 
         if (count($i10n_inputs_received) > 0) {
-            $this->processAeucLabelDeliveryTime($i10n_inputs_received);
+            $this->processAeucLabelMultiLang($i10n_inputs_received);
             $has_processed_something = true;
         }
 
@@ -1104,7 +1129,7 @@ class Ps_LegalCompliance extends Module
         }
     }
 
-    protected function processAeucLabelDeliveryTime(array $i10n_inputs)
+    protected function processAeucLabelMultiLang(array $i10n_inputs)
     {
         if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_TIME_AVAILABLE'])) {
             Configuration::updateValue('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $i10n_inputs['AEUC_LABEL_DELIVERY_TIME_AVAILABLE']);
@@ -1114,6 +1139,9 @@ class Ps_LegalCompliance extends Module
         }
         if (isset($i10n_inputs['AEUC_LABEL_DELIVERY_ADDITIONAL'])) {
             Configuration::updateValue('AEUC_LABEL_DELIVERY_ADDITIONAL', $i10n_inputs['AEUC_LABEL_DELIVERY_ADDITIONAL']);
+        }
+        if (isset($i10n_inputs['AEUC_LABEL_CUSTOM_CART_TEXT'])) {
+            Configuration::updateValue('AEUC_LABEL_CUSTOM_CART_TEXT', $i10n_inputs['AEUC_LABEL_CUSTOM_CART_TEXT']);
         }
     }
 
@@ -1454,6 +1482,14 @@ class Ps_LegalCompliance extends Module
                                                                ),
                                                            ),
                                                        ),
+                                                       array('type' => 'text',
+                                                             'lang' => true,
+                                                             'label' => $this->l('Custom text in shopping cart page',
+                                                                                 'ps_legalcompliance'),
+                                                             'name' => 'AEUC_LABEL_CUSTOM_CART_TEXT',
+                                                             'desc' => $this->l('This text will be displayed on the shopping cart page. Leave empty to disable.', 'ps_legalcompliance'),
+                                                             'hint' => $this->l('Please inform your customers about how the order is legally confirmed.', 'ps_legalcompliance'),
+                                                       ),
                                      ),
                                      'submit' => array(
                                          'title' => $this->l('Save', 'ps_legalcompliance'),
@@ -1469,6 +1505,7 @@ class Ps_LegalCompliance extends Module
     {
         $delivery_time_available_values = array();
         $delivery_time_oos_values = array();
+        $custom_cart_text_values = array();
 
         $langs = Language::getLanguages(false, false);
 
@@ -1477,12 +1514,14 @@ class Ps_LegalCompliance extends Module
             $delivery_time_available_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_AVAILABLE', $tmp_id_lang);
             $delivery_time_oos_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_TIME_OOS', $tmp_id_lang);
             $delivery_additional[$tmp_id_lang] = Configuration::get('AEUC_LABEL_DELIVERY_ADDITIONAL', $tmp_id_lang);
+            $custom_cart_text_values[$tmp_id_lang] = Configuration::get('AEUC_LABEL_CUSTOM_CART_TEXT', $tmp_id_lang);
         }
 
         return array(
             'AEUC_LABEL_DELIVERY_TIME_AVAILABLE' => $delivery_time_available_values,
             'AEUC_LABEL_DELIVERY_TIME_OOS' => $delivery_time_oos_values,
             'AEUC_LABEL_DELIVERY_ADDITIONAL' => $delivery_additional,
+            'AEUC_LABEL_CUSTOM_CART_TEXT' => $custom_cart_text_values,
             'AEUC_LABEL_SPECIFIC_PRICE' => Configuration::get('AEUC_LABEL_SPECIFIC_PRICE'),
             'AEUC_LABEL_UNIT_PRICE' => Configuration::get('AEUC_LABEL_UNIT_PRICE'),
             'AEUC_LABEL_TAX_INC_EXC' => Configuration::get('AEUC_LABEL_TAX_INC_EXC'),

@@ -123,6 +123,9 @@ body.tax-display-enabled .product-accessories .product-description {
 div.condition-label label.js-terms {
 	text-align: left;
 }
+#conditions-to-approve #cta-terms-and-conditions-1 {
+	font-weight: bold;
+}
 
 div.aeuc_footer_info {
 	text-align: center;
