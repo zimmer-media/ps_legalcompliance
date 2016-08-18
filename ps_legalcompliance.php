@@ -78,7 +78,7 @@ class Ps_LegalCompliance extends Module
         $this->displayName = $this->l('Legal Compliance');
         $this->description = $this->l('This module helps merchants comply with applicable e-commerce laws.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
-        
+
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 
         /* Init errors var */
@@ -518,7 +518,7 @@ class Ps_LegalCompliance extends Module
 
         return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
     }
-    
+
     public function hookDisplayReassurance($param)
     {
         if (isset($this->context->controller->php_self) && (in_array($this->context->controller->php_self, array('order', 'cart')))) {
@@ -823,7 +823,15 @@ class Ps_LegalCompliance extends Module
 
             $termsAndConditions
                 ->setText(
-                    $this->l('I agree to the starting of the contract and acknowledge that I lose my right to cancel once the download has begun or the service has been fully performed.', [], 'Checkout')
+                    $this->trans(
+                        '[1]For digital goods:[/1] I want immediate access to the digital content and I acknowledge that thereby I lose my right to cancel once the service has begun.[2][1]For services:[/1] I agree to the starting of the service and I acknowledge that I lose my right to cancel once the service has been fully performed.',
+                        array(
+                            '[1]' => '<strong>',
+                            '[/1]' => '</strong>',
+                            '[2]' => '<br>',
+                        ),
+                        'Modules.LegalCompliance.Shop'
+                    )
                 )
                 ->setIdentifier('virtual-products')
             ;
