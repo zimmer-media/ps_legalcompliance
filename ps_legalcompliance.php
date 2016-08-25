@@ -78,7 +78,7 @@ class Ps_LegalCompliance extends Module
         $this->displayName = $this->l('Legal Compliance');
         $this->description = $this->l('This module helps merchants comply with applicable e-commerce laws.');
         $this->confirmUninstall = $this->l('Are you sure you want to uninstall this module?');
-        
+
         $this->ps_versions_compliancy = array('min' => '1.7', 'max' => _PS_VERSION_);
 
         /* Init errors var */
@@ -92,38 +92,63 @@ class Ps_LegalCompliance extends Module
     public function install()
     {
         $return = parent::install() &&
-                  $this->loadTables() &&
-                  $this->installHooks() &&
-                  $this->registerModulesBackwardCompatHook() &&
-                  $this->registerHook('header') &&
-                  $this->registerHook('displayProductPriceBlock') &&
-                  $this->registerHook('displayFooter') &&
-                  $this->registerHook('displayFooterAfter') &&
-                  $this->registerHook('actionEmailAddAfterContent') &&
-                  $this->registerHook('advancedPaymentOptions') &&
-                  $this->registerHook('displayCartTotalPriceLabel') &&
-                  $this->registerHook('displayCMSPrintButton') &&
-                  $this->registerHook('displayCMSDisputeInformation') &&
-                  $this->registerHook('termsAndConditions') &&
-                  $this->registerHook('displayOverrideTemplate') &&
-                  $this->registerHook('displayCheckoutSummaryTop') &&
-                  $this->registerHook('sendMailAlterTemplateVars') &&
-                  $this->registerHook('displayReassurance') &&
-                  $this->createConfig() &&
-                  $this->generateAndLinkCMSPages() &&
-                  $this->removeCMSPagesIfNeeded() &&
-                  $this->setLegalContentToOrderMails();
+            $this->loadTables() &&
+            $this->installHooks() &&
+            $this->registerModulesBackwardCompatHook() &&
+            $this->registerHook('header') &&
+            $this->registerHook('displayProductPriceBlock') &&
+            $this->registerHook('displayFooter') &&
+            $this->registerHook('displayFooterAfter') &&
+            $this->registerHook('actionEmailAddAfterContent') &&
+            $this->registerHook('advancedPaymentOptions') &&
+            $this->registerHook('displayCartTotalPriceLabel') &&
+            $this->registerHook('displayCMSPrintButton') &&
+            $this->registerHook('displayCMSDisputeInformation') &&
+            $this->registerHook('termsAndConditions') &&
+            $this->registerHook('displayOverrideTemplate') &&
+            $this->registerHook('displayCheckoutSummaryTop') &&
+            $this->registerHook('sendMailAlterTemplateVars') &&
+            $this->registerHook('displayReassurance') &&
+            $this->createConfig() &&
+            $this->generateAndLinkCMSPages() &&
+            $this->removeCMSPagesIfNeeded() &&
+            $this->setLegalContentToOrderMails() &&
+            $this->hideWirePaymentInviteAtOrderConfirmation();
 
         $this->emptyTemplatesCache();
 
         return (bool) $return;
     }
 
+    public function hideWirePaymentInviteAtOrderConfirmation()
+    {
+        return $this->updateWirePaymentInviteDisplayAtOrderConfirmation(false);
+    }
+
+    public function updateWirePaymentInviteDisplayAtOrderConfirmation($display)
+    {
+        $wirePaymentModule = Module::getInstanceByName('ps_wirepayment');
+        if (defined(get_class($wirePaymentModule) . '::FLAG_DISPLAY_PAYMENT_INVITE')) {
+            $flagName = constant(get_class($wirePaymentModule) . '::FLAG_DISPLAY_PAYMENT_INVITE');
+            Configuration::updateValue($flagName, $display);
+
+            return true;
+        }
+
+        return false;
+    }
+
+    public function showWirePaymentInviteAtOrderConfirmation()
+    {
+        return $this->updateWirePaymentInviteDisplayAtOrderConfirmation(true);
+    }
+
     public function uninstall()
     {
         return parent::uninstall() &&
-               $this->dropConfig() &&
-               $this->unloadTables();
+            $this->dropConfig() &&
+            $this->showWirePaymentInviteAtOrderConfirmation() &&
+            $this->unloadTables();
     }
 
     public function disable($force_all = false)
@@ -518,7 +543,7 @@ class Ps_LegalCompliance extends Module
 
         return $this->display(__FILE__, 'hookDisplayCheckoutSummaryTop.tpl');
     }
-    
+
     public function hookDisplayReassurance($param)
     {
         if (isset($this->context->controller->php_self) && (in_array($this->context->controller->php_self, array('order', 'cart')))) {
