@@ -97,6 +97,7 @@ class Ps_LegalCompliance extends Module
             $this->registerModulesBackwardCompatHook() &&
             $this->registerHook('header') &&
             $this->registerHook('displayProductPriceBlock') &&
+            $this->registerHook('displayCheckoutSubtotalDetails') &&
             $this->registerHook('displayFooter') &&
             $this->registerHook('displayFooterAfter') &&
             $this->registerHook('actionEmailAddAfterContent') &&
@@ -1004,6 +1005,19 @@ class Ps_LegalCompliance extends Module
 
                 return $this->dumpHookDisplayProductPriceBlock($smartyVars, $hook_type, $product->id);
             }
+        }
+    }
+
+    public function hookDisplayCheckoutSubtotalDetails($param)
+    {
+        // Display "under conditions" when the shipping subtotal equals 0
+        if ('shipping' === $param['subtotal']['type'] && 0 === $param['subtotal']['amount']) {
+            $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
+            $cms_page_shipping_and_payment = $cms_role_repository->findOneByName(self::LEGAL_SHIP_PAY);
+            $link = $this->context->link->getCMSLink((int)$cms_page_shipping_and_payment->id_cms);
+
+            $this->context->smarty->assign(array('link' => $link));
+            return $this->display(__FILE__, 'hookDisplayCartPriceBlock_shipping_details.tpl');
         }
     }
 
