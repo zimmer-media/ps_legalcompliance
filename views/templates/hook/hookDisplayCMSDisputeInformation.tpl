@@ -28,5 +28,5 @@
 </h4>
 
 <p>
-	{l s='The European Commission gives consumers the opportunity to resolve online disputes pursuant to Art. 14 Para. 1 of the ODR on one of their platforms. The platform ([1]http://ec.europa.eu/consumers/odr[/1]) serves as a site where consumers can try to reach out-of-court settlements of disputes arising from online purchases and contracts for services.' tags=['<a href="http://ec.europa.eu/consumers/odr" target="_blank" rel="nofollow">'] mod='ps_legalcompliance'}
+	{l s='The European Commission gives consumers the opportunity to resolve online disputes pursuant to Art. 14 Para. 1 of the ODR on one of their platforms. The platform ([1]http://ec.europa.eu/consumers/odr[/1]) serves as a site where consumers can try to reach out-of-court settlements of disputes arising from online purchases and contracts for services.' sprintf=['[1]' => '<a href="http://ec.europa.eu/consumers/odr" target="_blank" rel="nofollow">', '[/1]' => '</a>'] mod='ps_legalcompliance'}
 </p>
