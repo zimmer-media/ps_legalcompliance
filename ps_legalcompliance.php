@@ -742,15 +742,15 @@ class Ps_LegalCompliance extends Module
 
     public function hookHeader($param)
     {
-        $this->context->controller->addCSS($this->_path.'views/css/aeuc_front.css', 'all');
+        $this->context->controller->registerStylesheet('modules-aeuc_front', 'modules/'.$this->name.'/views/css/aeuc_front.css', ['media' => 'all', 'priority' => 150]);
 
         if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'cms')) {
             if ($this->isPrintableCMSPage()) {
-                $this->context->controller->addCSS($this->_path.'views/css/aeuc_print.css', 'print');
+                $this->context->controller->registerStylesheet('modules-aeuc_print', 'modules/'.$this->name.'/views/css/aeuc_print.css', ['media' => 'print', 'priority' => 150]);
             }
         }
         if (Tools::getValue('direct_print') == '1') {
-            $this->context->controller->addJS($this->_path . 'views/js/fo_aeuc_print.js');
+            $this->context->controller->registerJavascript('modules-fo_aeuc_print', 'modules/'.$this->name.'/views/js/fo_aeuc_print.js', ['position' => 'bottom', 'priority' => 150]);
         }
     }
 
