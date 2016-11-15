@@ -32,6 +32,7 @@ use PrestaShop\PrestaShop\Core\Foundation\Database\EntityManager;
 use PrestaShop\PrestaShop\Core\Foundation\Filesystem\FileSystem;
 use PrestaShop\PrestaShop\Core\Email\EmailLister;
 use PrestaShop\PrestaShop\Core\Checkout\TermsAndConditions;
+use PrestaShop\PrestaShop\Core\Payment\PaymentOption;
 
 /* Include required entities */
 include_once dirname(__FILE__).'/entities/AeucCMSRoleEmailEntity.php';
@@ -651,7 +652,7 @@ class Ps_LegalCompliance extends Module
                     continue;
                 }
 
-                foreach (Core_Business_Payment_PaymentOption::convertLegacyOption($legacyOption) as $option) {
+                foreach (PaymentOption::convertLegacyOption($legacyOption) as $option) {
                     $option->setModuleName($module_name);
                     $to_be_cleaned = $option->getForm();
                     if ($to_be_cleaned) {
