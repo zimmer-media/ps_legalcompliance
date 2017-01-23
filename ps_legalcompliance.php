@@ -329,7 +329,7 @@ class Ps_LegalCompliance extends Module
                 if ($conditions_found) {
                     $content['cms'] = array_values($content['cms']);
                     $content = json_encode($content);
-                    Db::getInstance()->update('link_block', array('content' => $content), '`id_link_block` = '.(int) $link_block['id_link_block']);
+                    Db::getInstance()->update('link_block', array('content' => pSQL($content)), '`id_link_block` = '.(int) $link_block['id_link_block']);
                 }
             }
         }
