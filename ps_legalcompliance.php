@@ -206,7 +206,6 @@ class Ps_LegalCompliance extends Module
             $new_hook->title = $hook_name;
             $new_hook->description = $hook['description'];
             $new_hook->position = true;
-            $new_hook->live_edit = false;
 
             if (!$new_hook->add()) {
                 $return &= false;
