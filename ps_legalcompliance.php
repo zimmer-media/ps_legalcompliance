@@ -64,7 +64,7 @@ class Ps_LegalCompliance extends Module
     {
         $this->name = 'ps_legalcompliance';
         $this->tab = 'administration';
-        $this->version = '1.1.7';
+        $this->version = '1.1.8';
         $this->author = 'PrestaShop';
         $this->need_instance = 0;
         $this->bootstrap = true;
