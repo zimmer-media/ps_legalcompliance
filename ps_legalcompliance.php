@@ -527,7 +527,7 @@ class Ps_LegalCompliance extends Module
 
     public function hookDisplayOverrideTemplate($param)
     {
-        if (isset($this->context->controller->php_self) && ($this->context->controller->php_self == 'order')) {
+        if (isset($this->context->controller->php_self) && !$this->context->controller->ajax && ($this->context->controller->php_self == 'order')) {
             return $this->getTemplatePath('hookDisplayOverrideTemplateFooter.tpl');
         }
     }
