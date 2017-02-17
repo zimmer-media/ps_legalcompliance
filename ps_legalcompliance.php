@@ -261,22 +261,22 @@ class Ps_LegalCompliance extends Module
         $cms_pages = array(
             self::LEGAL_NOTICE => array('meta_title' => $this->trans('Legal notice', array(), 'Modules.Legalcompliance.Admin'),
                                         'link_rewrite' => 'legal-notice',
-                                        'content' => $this->trans('Please add your legal information to this site.', array(), 'Modules.Legalcompliance.Shop'), ),
+                                        'content' => $this->trans('Please add your legal information to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_CONDITIONS => array('meta_title' => $this->trans('Terms of Service (ToS)', array(), 'Modules.Legalcompliance.Admin'),
                                             'link_rewrite' => 'terms-of-service-tos',
-                                            'content' => $this->trans('Please add your Terms of Service (ToS) to this site.', array(), 'Modules.Legalcompliance.Shop'), ),
+                                            'content' => $this->trans('Please add your Terms of Service (ToS) to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_REVOCATION => array('meta_title' => $this->trans('Revocation terms', array(), 'Modules.Legalcompliance.Admin'),
                                             'link_rewrite' => 'revocation-terms',
-                                            'content' => $this->trans('Please add your Revocation terms to this site.', array(), 'Modules.Legalcompliance.Shop'), ),
+                                            'content' => $this->trans('Please add your Revocation terms to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_PRIVACY => array('meta_title' => $this->trans('Privacy', array(), 'Modules.Legalcompliance.Admin'),
                                         'link_rewrite' => 'privacy',
-                                        'content' => $this->trans('Please insert here your content about privacy. If you have activated Social Media modules, please provide a notice about third-party access to data.', array(),  'Modules.Legalcompliance.Shop'), ),
+                                        'content' => $this->trans('Please insert here your content about privacy. If you have activated Social Media modules, please provide a notice about third-party access to data.', array(), 'Module.Legalcompliance.Admin'), ),
             self::LEGAL_SHIP_PAY => array('meta_title' => $this->trans('Shipping and payment', array(), 'Modules.Legalcompliance.Admin'),
                                           'link_rewrite' => 'shipping-and-payment',
-                                          'content' => $this->trans('Please add your Shipping and payment information to this site.', array(), 'Modules.Legalcompliance.Shop'), ),
+                                          'content' => $this->trans('Please add your Shipping and payment information to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_ENVIRONMENTAL => array('meta_title' => $this->trans('Environmental notice', array(), 'Modules.Legalcompliance.Admin'),
                                                'link_rewrite' => 'environmental-notice',
-                                               'content' => $this->trans('Please add your Environmental information to this site.', array(), 'Modules.Legalcompliance.Shop'), ),
+                                               'content' => $this->trans('Please add your Environmental information to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
         );
 
         $cms_role_repository = $this->entity_manager->getRepository('CMSRole');
