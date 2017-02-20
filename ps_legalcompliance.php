@@ -1492,7 +1492,7 @@ class Ps_LegalCompliance extends Module
                                                        ),
                                                        array(
                                                            'type' => 'switch',
-                                                           'label' => $this->trans('\'From\' price label (when combinations)'),
+                                                           'label' => $this->trans('\'From\' price label (when combinations)', array(), 'Modules.Legalcompliance.Admin'),
                                                            'name' => 'AEUC_LABEL_COMBINATION_FROM',
                                                            'is_bool' => true,
                                                            'desc' => $this->trans('Displays a \'From\' label before the price on products with combinations.', array(), 'Modules.Legalcompliance.Admin'),
