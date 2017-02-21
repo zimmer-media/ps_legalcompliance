@@ -270,7 +270,7 @@ class Ps_LegalCompliance extends Module
                                             'content' => $this->trans('Please add your Revocation terms to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_PRIVACY => array('meta_title' => $this->trans('Privacy', array(), 'Modules.Legalcompliance.Admin'),
                                         'link_rewrite' => 'privacy',
-                                        'content' => $this->trans('Please insert here your content about privacy. If you have activated Social Media modules, please provide a notice about third-party access to data.', array(), 'Module.Legalcompliance.Admin'), ),
+                                        'content' => $this->trans('Please insert here your content about privacy. If you have activated Social Media modules, please provide a notice about third-party access to data.', array(), 'Modules.Legalcompliance.Admin'), ),
             self::LEGAL_SHIP_PAY => array('meta_title' => $this->trans('Shipping and payment', array(), 'Modules.Legalcompliance.Admin'),
                                           'link_rewrite' => 'shipping-and-payment',
                                           'content' => $this->trans('Please add your Shipping and payment information to this site.', array(), 'Modules.Legalcompliance.Admin'), ),
@@ -799,7 +799,7 @@ class Ps_LegalCompliance extends Module
             $termsAndConditions = new TermsAndConditions();
             $termsAndConditions
                 ->setText(
-                    $this->trans('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionally.', [], 'Modules.LegalCompliance.Shop'),
+                    $this->trans('I agree to the [terms of service] and [revocation terms] and will adhere to them unconditionally.', [], 'Modules.Legalcompliance.Shop'),
                     $link_conditions,
                     $link_revocation
                 )
@@ -820,7 +820,7 @@ class Ps_LegalCompliance extends Module
                             '[/1]' => '</strong>',
                             '[2]' => '<br>',
                         ),
-                        'Modules.LegalCompliance.Shop'
+                        'Modules.Legalcompliance.Shop'
                     )
                 )
                 ->setIdentifier('virtual-products')
@@ -1047,7 +1047,7 @@ class Ps_LegalCompliance extends Module
                 '[2]' => '<a href="http://doc.prestashop.com/display/PS17/Complying+with+the+European+legislation" target="_blank">',
                 '[/2]' => '</a>',
             ),
-            'Modules.LegalCompliance.Admin'
+            'Modules.Legalcompliance.Admin'
         );
 
         $this->context->smarty->assign('module_dir', $this->_path);
