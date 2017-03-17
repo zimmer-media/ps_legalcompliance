@@ -783,7 +783,7 @@ class Ps_LegalCompliance extends Module
         $cms_page_conditions_associated = $cms_role_repository->findOneByName(self::LEGAL_CONDITIONS);
         $cms_page_revocation_associated = $cms_role_repository->findOneByName(self::LEGAL_REVOCATION);
 
-        if ((int) $cms_page_conditions_associated->id_cms > 0 && (int) $cms_page_revocation_associated->id_cms > 0) {
+        if (Configuration::get('PS_CONDITIONS') && (int) $cms_page_conditions_associated->id_cms > 0 && (int) $cms_page_revocation_associated->id_cms > 0) {
             $cms_conditions = $cms_repository->i10nFindOneById((int) $cms_page_conditions_associated->id_cms,
                                                                (int) $this->context->language->id,
                                                                (int) $this->context->shop->id);
