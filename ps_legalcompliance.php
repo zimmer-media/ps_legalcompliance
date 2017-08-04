@@ -224,7 +224,7 @@ class Ps_LegalCompliance extends Module
         $langs = $langs_repository->findAll();
 
         foreach ($langs as $lang) {
-            $custom_cart_text_values[(int) $lang->id] = $this->trans('The order will only be confirmed when you click on the button \'Order with an obligation to pay\' at the end of the checkout!', array(), 'Modules.Legalcompliance.Shop');
+            $custom_cart_text_values[(int) $lang->id] = $this->trans('The order will only be confirmed when you click on the button \'Order with an obligation to pay\' at the end of the checkout!', array(), 'Modules.Legalcompliance.Shop', $lang->locale);
         }
 
         /* Base settings */
