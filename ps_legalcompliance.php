@@ -45,8 +45,8 @@ class Ps_LegalCompliance extends Module
     protected $entity_manager;
     protected $filesystem;
     protected $emails;
-    protected $_errors;
-    protected $_warnings;
+    protected $_errors = array();
+    protected $_warnings = array();
 
     /* Constants used for LEGAL/CMS Management */
     const LEGAL_NO_ASSOC = 'NO_ASSOC';
@@ -860,7 +860,7 @@ class Ps_LegalCompliance extends Module
         $product = $param['product'];
         $hook_type = $param['type'];
 
-        if (is_array($product)) {
+        if (! $product instanceof Product) {
             $product_repository = $this->entity_manager->getRepository('Product');
             $product = $product_repository->findOne((int) $product['id_product']);
         }
