@@ -23,7 +23,7 @@
  *  International Registered Trademark & Property of PrestaShop SA
  *}
 
-<div class="aeuc_footer_info">
+<div class="aeuc_footer_info single_column col-sm-12">
 	{if isset($delivery_additional_information)}
 		* {$delivery_additional_information}
 		<a href="{$link_shipping}">{l s='Shipping and payment' d='Modules.Legalcompliance.Shop'}</a>
